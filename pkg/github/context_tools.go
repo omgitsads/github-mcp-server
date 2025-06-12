@@ -29,11 +29,11 @@ func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (mcp.Too
 			return mcp.NewToolResultErrorFromErr("failed to get GitHub client", err), nil
 		}
 
-		user, _, err := client.Users.Get(ctx, "")
+		user, res, err := client.Users.Get(ctx, "")
 		if err != nil {
 			return nil, ghErrors.NewGitHubAPIError(
 				"failed to get user",
-				nil, // No response to include
+				res,
 				err,
 			)
 		}
