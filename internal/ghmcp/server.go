@@ -14,6 +14,8 @@ import (
 
 	"github.com/github/github-mcp-server/pkg/github"
 	mcplog "github.com/github/github-mcp-server/pkg/log"
+	"github.com/github/github-mcp-server/pkg/toolsets"
+	ts "github.com/github/github-mcp-server/pkg/toolsets"
 	"github.com/github/github-mcp-server/pkg/translations"
 	gogithub "github.com/google/go-github/v69/github"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -45,6 +47,9 @@ type MCPServerConfig struct {
 
 	// Translator provides translated text for the server tooling
 	Translator translations.TranslationHelperFunc
+
+	// ToolHandlerWrapper is a function that can be used to wrap tool handlers
+	ToolHandlerWrapper toolsets.ToolHandlerWrapper
 }
 
 func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
@@ -120,6 +125,12 @@ func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
 		getGQLClient,
 		cfg.Translator,
 	)
+
+	if cfg.ToolHandlerWrapper != nil {
+		// If a custom tool handler wrapper is provided, use it
+		toolsets.ToolHandlerWrapper = cfg.ToolHandlerWrapper
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize toolsets: %w", err)
 	}
@@ -129,11 +140,11 @@ func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
 
 	// Register the tools with the server
 	toolsets.RegisterTools(ghServer)
-	context.RegisterTools(ghServer)
+	context.RegisterTools(ghServer, ts.DefaultToolsetHandler)
 
 	if cfg.DynamicToolsets {
 		dynamic := github.InitDynamicToolset(ghServer, toolsets, cfg.Translator)
-		dynamic.RegisterTools(ghServer)
+		dynamic.RegisterTools(ghServer, ts.DefaultToolsetHandler)
 	}
 
 	return ghServer, nil

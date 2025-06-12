@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/translations"
 	"github.com/google/go-github/v69/github"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -111,9 +112,13 @@ func RepositoryResourceContentsHandler(getClient GetClientFn) func(ctx context.C
 		if err != nil {
 			return nil, fmt.Errorf("failed to get GitHub client: %w", err)
 		}
-		fileContent, directoryContent, _, err := client.Repositories.GetContents(ctx, owner, repo, path, opts)
+		fileContent, directoryContent, resp, err := client.Repositories.GetContents(ctx, owner, repo, path, opts)
 		if err != nil {
-			return nil, err
+			return nil, ghErrors.NewGitHubAPIError(
+				fmt.Sprintf("failed to get contents for repository '%s/%s'", owner, repo),
+				resp,
+				err,
+			)
 		}
 
 		if directoryContent != nil {
