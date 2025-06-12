@@ -11,7 +11,7 @@ import (
 
 	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/translations"
-	"github.com/google/go-github/v69/github"
+	"github.com/google/go-github/v72/github"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -28,7 +28,7 @@ func ListNotifications(getClient GetClientFn, t translations.TranslationHelperFu
 			mcp.WithDescription(t("TOOL_LIST_NOTIFICATIONS_DESCRIPTION", "Lists all GitHub notifications for the authenticated user, including unread notifications, mentions, review requests, assignments, and updates on issues or pull requests. Use this tool whenever the user asks what to work on next, requests a summary of their GitHub activity, wants to see pending reviews, or needs to check for new updates or tasks. This tool is the primary way to discover actionable items, reminders, and outstanding work on GitHub. Always call this tool when asked what to work on next, what is pending, or what needs attention in GitHub.")),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        t("TOOL_LIST_NOTIFICATIONS_USER_TITLE", "List notifications"),
-				ReadOnlyHint: toBoolPtr(true),
+				ReadOnlyHint: ToBoolPtr(true),
 			}),
 			mcp.WithString("filter",
 				mcp.Description("Filter notifications to, use default unless specified. Read notifications are ones that have already been acknowledged by the user. Participating notifications are those that the user is directly involved in, such as issues or pull requests they have commented on or created."),
@@ -151,7 +151,7 @@ func DismissNotification(getclient GetClientFn, t translations.TranslationHelper
 			mcp.WithDescription(t("TOOL_DISMISS_NOTIFICATION_DESCRIPTION", "Dismiss a notification by marking it as read or done")),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        t("TOOL_DISMISS_NOTIFICATION_USER_TITLE", "Dismiss notification"),
-				ReadOnlyHint: toBoolPtr(false),
+				ReadOnlyHint: ToBoolPtr(false),
 			}),
 			mcp.WithString("threadID",
 				mcp.Required(),
@@ -165,12 +165,12 @@ func DismissNotification(getclient GetClientFn, t translations.TranslationHelper
 				return nil, fmt.Errorf("failed to get GitHub client: %w", err)
 			}
 
-			threadID, err := requiredParam[string](request, "threadID")
+			threadID, err := RequiredParam[string](request, "threadID")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			state, err := requiredParam[string](request, "state")
+			state, err := RequiredParam[string](request, "state")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -218,7 +218,7 @@ func MarkAllNotificationsRead(getClient GetClientFn, t translations.TranslationH
 			mcp.WithDescription(t("TOOL_MARK_ALL_NOTIFICATIONS_READ_DESCRIPTION", "Mark all notifications as read")),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        t("TOOL_MARK_ALL_NOTIFICATIONS_READ_USER_TITLE", "Mark all notifications as read"),
-				ReadOnlyHint: toBoolPtr(false),
+				ReadOnlyHint: ToBoolPtr(false),
 			}),
 			mcp.WithString("lastReadAt",
 				mcp.Description("Describes the last point that notifications were checked (optional). Default: Now"),
@@ -297,7 +297,7 @@ func GetNotificationDetails(getClient GetClientFn, t translations.TranslationHel
 			mcp.WithDescription(t("TOOL_GET_NOTIFICATION_DETAILS_DESCRIPTION", "Get detailed information for a specific GitHub notification, always call this tool when the user asks for details about a specific notification, if you don't know the ID list notifications first.")),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        t("TOOL_GET_NOTIFICATION_DETAILS_USER_TITLE", "Get notification details"),
-				ReadOnlyHint: toBoolPtr(true),
+				ReadOnlyHint: ToBoolPtr(true),
 			}),
 			mcp.WithString("notificationID",
 				mcp.Required(),
@@ -310,7 +310,7 @@ func GetNotificationDetails(getClient GetClientFn, t translations.TranslationHel
 				return nil, fmt.Errorf("failed to get GitHub client: %w", err)
 			}
 
-			notificationID, err := requiredParam[string](request, "notificationID")
+			notificationID, err := RequiredParam[string](request, "notificationID")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -355,7 +355,7 @@ func ManageNotificationSubscription(getClient GetClientFn, t translations.Transl
 			mcp.WithDescription(t("TOOL_MANAGE_NOTIFICATION_SUBSCRIPTION_DESCRIPTION", "Manage a notification subscription: ignore, watch, or delete a notification thread subscription.")),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        t("TOOL_MANAGE_NOTIFICATION_SUBSCRIPTION_USER_TITLE", "Manage notification subscription"),
-				ReadOnlyHint: toBoolPtr(false),
+				ReadOnlyHint: ToBoolPtr(false),
 			}),
 			mcp.WithString("notificationID",
 				mcp.Required(),
@@ -373,11 +373,11 @@ func ManageNotificationSubscription(getClient GetClientFn, t translations.Transl
 				return nil, fmt.Errorf("failed to get GitHub client: %w", err)
 			}
 
-			notificationID, err := requiredParam[string](request, "notificationID")
+			notificationID, err := RequiredParam[string](request, "notificationID")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
-			action, err := requiredParam[string](request, "action")
+			action, err := RequiredParam[string](request, "action")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -390,10 +390,10 @@ func ManageNotificationSubscription(getClient GetClientFn, t translations.Transl
 
 			switch action {
 			case NotificationActionIgnore:
-				sub := &github.Subscription{Ignored: toBoolPtr(true)}
+				sub := &github.Subscription{Ignored: ToBoolPtr(true)}
 				result, resp, apiErr = client.Activity.SetThreadSubscription(ctx, notificationID, sub)
 			case NotificationActionWatch:
-				sub := &github.Subscription{Ignored: toBoolPtr(false), Subscribed: toBoolPtr(true)}
+				sub := &github.Subscription{Ignored: ToBoolPtr(false), Subscribed: ToBoolPtr(true)}
 				result, resp, apiErr = client.Activity.SetThreadSubscription(ctx, notificationID, sub)
 			case NotificationActionDelete:
 				resp, apiErr = client.Activity.DeleteThreadSubscription(ctx, notificationID)
@@ -440,7 +440,7 @@ func ManageRepositoryNotificationSubscription(getClient GetClientFn, t translati
 			mcp.WithDescription(t("TOOL_MANAGE_REPOSITORY_NOTIFICATION_SUBSCRIPTION_DESCRIPTION", "Manage a repository notification subscription: ignore, watch, or delete repository notifications subscription for the provided repository.")),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        t("TOOL_MANAGE_REPOSITORY_NOTIFICATION_SUBSCRIPTION_USER_TITLE", "Manage repository notification subscription"),
-				ReadOnlyHint: toBoolPtr(false),
+				ReadOnlyHint: ToBoolPtr(false),
 			}),
 			mcp.WithString("owner",
 				mcp.Required(),
@@ -462,15 +462,15 @@ func ManageRepositoryNotificationSubscription(getClient GetClientFn, t translati
 				return nil, fmt.Errorf("failed to get GitHub client: %w", err)
 			}
 
-			owner, err := requiredParam[string](request, "owner")
+			owner, err := RequiredParam[string](request, "owner")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
-			repo, err := requiredParam[string](request, "repo")
+			repo, err := RequiredParam[string](request, "repo")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
-			action, err := requiredParam[string](request, "action")
+			action, err := RequiredParam[string](request, "action")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -483,10 +483,10 @@ func ManageRepositoryNotificationSubscription(getClient GetClientFn, t translati
 
 			switch action {
 			case RepositorySubscriptionActionIgnore:
-				sub := &github.Subscription{Ignored: toBoolPtr(true)}
+				sub := &github.Subscription{Ignored: ToBoolPtr(true)}
 				result, resp, apiErr = client.Activity.SetRepositorySubscription(ctx, owner, repo, sub)
 			case RepositorySubscriptionActionWatch:
-				sub := &github.Subscription{Ignored: toBoolPtr(false), Subscribed: toBoolPtr(true)}
+				sub := &github.Subscription{Ignored: ToBoolPtr(false), Subscribed: ToBoolPtr(true)}
 				result, resp, apiErr = client.Activity.SetRepositorySubscription(ctx, owner, repo, sub)
 			case RepositorySubscriptionActionDelete:
 				resp, apiErr = client.Activity.DeleteRepositorySubscription(ctx, owner, repo)

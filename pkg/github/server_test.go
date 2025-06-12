@@ -2,10 +2,13 @@ package github
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"testing"
 
-	"github.com/google/go-github/v69/github"
+	"github.com/google/go-github/v72/github"
 	"github.com/shurcooL/githubv4"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,9 +19,36 @@ func stubGetClientFn(client *github.Client) GetClientFn {
 	}
 }
 
+func stubGetClientFromHTTPFn(client *http.Client) GetClientFn {
+	return func(_ context.Context) (*github.Client, error) {
+		return github.NewClient(client), nil
+	}
+}
+
+func stubGetClientFnErr(err string) GetClientFn {
+	return func(_ context.Context) (*github.Client, error) {
+		return nil, errors.New(err)
+	}
+}
+
 func stubGetGQLClientFn(client *githubv4.Client) GetGQLClientFn {
 	return func(_ context.Context) (*githubv4.Client, error) {
 		return client, nil
+	}
+}
+
+func badRequestHandler(msg string) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		structuredErrorResponse := github.ErrorResponse{
+			Message: msg,
+		}
+
+		b, err := json.Marshal(structuredErrorResponse)
+		if err != nil {
+			http.Error(w, "failed to marshal error response", http.StatusInternalServerError)
+		}
+
+		http.Error(w, string(b), http.StatusBadRequest)
 	}
 }
 
@@ -99,7 +129,7 @@ func Test_RequiredStringParam(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			request := createMCPRequest(tc.params)
-			result, err := requiredParam[string](request, tc.paramName)
+			result, err := RequiredParam[string](request, tc.paramName)
 
 			if tc.expectError {
 				assert.Error(t, err)

@@ -141,17 +141,22 @@ If you don't have Docker, you can use `go build` to build the binary in the
 
 The GitHub MCP Server supports enabling or disabling specific groups of functionalities via the `--toolsets` flag. This allows you to control which GitHub API capabilities are available to your AI tools. Enabling only the toolsets that you need can help the LLM with tool choice and reduce the context size.
 
+_Toolsets are not limited to Tools. Relevant MCP Resources and Prompts are also included where applicable._
+
 ### Available Toolsets
 
 The following sets of tools are available (all are on by default):
 
 | Toolset                 | Description                                                   |
 | ----------------------- | ------------------------------------------------------------- |
-| `repos`                 | Repository-related tools (file operations, branches, commits) |
-| `issues`                | Issue-related tools (create, read, update, comment)           |
-| `users`                 | Anything relating to GitHub Users                             |
-| `pull_requests`         | Pull request operations (create, merge, review)               |
+| `context`               | **Strongly recommended**: Tools that provide context about the current user and GitHub context you are operating in |
 | `code_security`         | Code scanning alerts and security features                    |
+| `issues`                | Issue-related tools (create, read, update, comment)           |
+| `notifications`         | GitHub Notifications related tools                            |
+| `pull_requests`         | Pull request operations (create, merge, review)               |
+| `repos`                 | Repository-related tools (file operations, branches, commits) |
+| `secret_protection`     | Secret protection related tools, such as GitHub Secret Scanning |
+| `users`                 | Anything relating to GitHub Users                             |
 | `experiments`           | Experimental features (not considered stable)                 |
 
 #### Specifying Toolsets
@@ -219,12 +224,30 @@ docker run -i --rm \
   ghcr.io/github/github-mcp-server
 ```
 
-## GitHub Enterprise Server
+## Read-Only Mode
+
+To run the server in read-only mode, you can use the `--read-only` flag. This will only offer read-only tools, preventing any modifications to repositories, issues, pull requests, etc.
+
+```bash
+./github-mcp-server --read-only
+```
+
+When using Docker, you can pass the read-only mode as an environment variable:
+
+```bash
+docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN=<your-token> \
+  -e GITHUB_READ_ONLY=1 \
+  ghcr.io/github/github-mcp-server
+```
+
+## GitHub Enterprise Server and Enterprise Cloud with data residency (ghe.com)
 
 The flag `--gh-host` and the environment variable `GITHUB_HOST` can be used to set
-the GitHub Enterprise Server hostname.
-Prefix the hostname with the `https://` URI scheme, as it otherwise defaults to `http://` which GitHub Enterprise Server does not support.
+the hostname for GitHub Enterprise Server or GitHub Enterprise Cloud with data residency.
 
+- For GitHub Enterprise Server, prefix the hostname with the `https://` URI scheme, as it otherwise defaults to `http://`, which GitHub Enterprise Server does not support.
+- For GitHub Enterprise Cloud with data residency, use `https://YOURSUBDOMAIN.ghe.com` as the hostname.
 ``` json
 "github": {
     "command": "docker",
@@ -240,7 +263,7 @@ Prefix the hostname with the `https://` URI scheme, as it otherwise defaults to 
     ],
     "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}",
-        "GITHUB_HOST": "https://<your GHES domain name>"
+        "GITHUB_HOST": "https://<your GHES or ghe.com domain name>"
     }
 }
 ```
