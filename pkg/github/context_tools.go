@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 
+	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/translations"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -30,7 +31,11 @@ func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (mcp.Too
 
 		user, _, err := client.Users.Get(ctx, "")
 		if err != nil {
-			return mcp.NewToolResultErrorFromErr("failed to get user", err), nil
+			return nil, ghErrors.NewGitHubAPIError(
+				"failed to get user",
+				nil, // No response to include
+				err,
+			)
 		}
 
 		return MarshalledTextResult(user), nil
