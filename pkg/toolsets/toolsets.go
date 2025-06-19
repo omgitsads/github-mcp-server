@@ -33,8 +33,6 @@ func NewServerTool(tool mcp.Tool, handler server.ToolHandlerFunc) server.ServerT
 	return server.ServerTool{Tool: tool, Handler: handler}
 }
 
-type ToolHandlerWrapper func(handler server.ToolHandlerFunc) server.ToolHandlerFunc
-
 func NewServerResourceTemplate(resourceTemplate mcp.ResourceTemplate, handler server.ResourceTemplateHandlerFunc) ServerResourceTemplate {
 	return ServerResourceTemplate{
 		resourceTemplate: resourceTemplate,
@@ -57,7 +55,6 @@ type Toolset struct {
 	writeTools  []server.ServerTool
 	readTools   []server.ServerTool
 
-	ToolHandler ToolHandlerWrapper
 	// resources are not tools, but the community seems to be moving towards namespaces as a broader concept
 	// and in order to have multiple servers running concurrently, we want to avoid overlapping resources too.
 	resourceTemplates []ServerResourceTemplate

@@ -15,7 +15,6 @@ import (
 	"github.com/github/github-mcp-server/pkg/github"
 	mcplog "github.com/github/github-mcp-server/pkg/log"
 	"github.com/github/github-mcp-server/pkg/raw"
-	"github.com/github/github-mcp-server/pkg/toolsets"
 	"github.com/github/github-mcp-server/pkg/translations"
 	gogithub "github.com/google/go-github/v72/github"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -47,9 +46,6 @@ type MCPServerConfig struct {
 
 	// Translator provides translated text for the server tooling
 	Translator translations.TranslationHelperFunc
-
-	// ToolHandlerWrapper is a function that can be used to wrap tool handlers
-	ToolHandlerWrapper toolsets.ToolHandlerWrapper
 }
 
 func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
