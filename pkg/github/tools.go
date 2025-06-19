@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 
+	"github.com/github/github-mcp-server/pkg/raw"
 	"github.com/github/github-mcp-server/pkg/toolsets"
 	"github.com/github/github-mcp-server/pkg/translations"
 	"github.com/google/go-github/v72/github"
@@ -15,7 +16,7 @@ type GetGQLClientFn func(context.Context) (*githubv4.Client, error)
 
 var DefaultTools = []string{"all"}
 
-func DefaultToolsetGroup(readOnly bool, getClient GetClientFn, getGQLClient GetGQLClientFn, t translations.TranslationHelperFunc) *toolsets.ToolsetGroup {
+func DefaultToolsetGroup(readOnly bool, getClient GetClientFn, getGQLClient GetGQLClientFn, getRawClient raw.GetRawClientFn, t translations.TranslationHelperFunc) *toolsets.ToolsetGroup {
 	tsg := toolsets.NewToolsetGroup(readOnly)
 
 	// Define all available features with their default state (disabled)
@@ -23,7 +24,7 @@ func DefaultToolsetGroup(readOnly bool, getClient GetClientFn, getGQLClient GetG
 	repos := toolsets.NewToolset("repos", "GitHub Repository related tools").
 		AddReadTools(
 			toolsets.NewServerTool(SearchRepositories(getClient, t)),
-			toolsets.NewServerTool(GetFileContents(getClient, t)),
+			toolsets.NewServerTool(GetFileContents(getClient, getRawClient, t)),
 			toolsets.NewServerTool(ListCommits(getClient, t)),
 			toolsets.NewServerTool(SearchCode(getClient, t)),
 			toolsets.NewServerTool(GetCommit(getClient, t)),
@@ -40,11 +41,11 @@ func DefaultToolsetGroup(readOnly bool, getClient GetClientFn, getGQLClient GetG
 			toolsets.NewServerTool(DeleteFile(getClient, t)),
 		).
 		AddResourceTemplates(
-			toolsets.NewServerResourceTemplate(GetRepositoryResourceContent(getClient, t)),
-			toolsets.NewServerResourceTemplate(GetRepositoryResourceBranchContent(getClient, t)),
-			toolsets.NewServerResourceTemplate(GetRepositoryResourceCommitContent(getClient, t)),
-			toolsets.NewServerResourceTemplate(GetRepositoryResourceTagContent(getClient, t)),
-			toolsets.NewServerResourceTemplate(GetRepositoryResourcePrContent(getClient, t)),
+			toolsets.NewServerResourceTemplate(GetRepositoryResourceContent(getClient, getRawClient, t)),
+			toolsets.NewServerResourceTemplate(GetRepositoryResourceBranchContent(getClient, getRawClient, t)),
+			toolsets.NewServerResourceTemplate(GetRepositoryResourceCommitContent(getClient, getRawClient, t)),
+			toolsets.NewServerResourceTemplate(GetRepositoryResourceTagContent(getClient, getRawClient, t)),
+			toolsets.NewServerResourceTemplate(GetRepositoryResourcePrContent(getClient, getRawClient, t)),
 		)
 	issues := toolsets.NewToolset("issues", "GitHub Issues related tools").
 		AddReadTools(
@@ -110,6 +111,26 @@ func DefaultToolsetGroup(readOnly bool, getClient GetClientFn, getGQLClient GetG
 			toolsets.NewServerTool(ManageRepositoryNotificationSubscription(getClient, t)),
 		)
 
+	actions := toolsets.NewToolset("actions", "GitHub Actions workflows and CI/CD operations").
+		AddReadTools(
+			toolsets.NewServerTool(ListWorkflows(getClient, t)),
+			toolsets.NewServerTool(ListWorkflowRuns(getClient, t)),
+			toolsets.NewServerTool(GetWorkflowRun(getClient, t)),
+			toolsets.NewServerTool(GetWorkflowRunLogs(getClient, t)),
+			toolsets.NewServerTool(ListWorkflowJobs(getClient, t)),
+			toolsets.NewServerTool(GetJobLogs(getClient, t)),
+			toolsets.NewServerTool(ListWorkflowRunArtifacts(getClient, t)),
+			toolsets.NewServerTool(DownloadWorkflowRunArtifact(getClient, t)),
+			toolsets.NewServerTool(GetWorkflowRunUsage(getClient, t)),
+		).
+		AddWriteTools(
+			toolsets.NewServerTool(RunWorkflow(getClient, t)),
+			toolsets.NewServerTool(RerunWorkflowRun(getClient, t)),
+			toolsets.NewServerTool(RerunFailedJobs(getClient, t)),
+			toolsets.NewServerTool(CancelWorkflowRun(getClient, t)),
+			toolsets.NewServerTool(DeleteWorkflowRunLogs(getClient, t)),
+		)
+
 	// Keep experiments alive so the system doesn't error out when it's always enabled
 	experiments := toolsets.NewToolset("experiments", "Experimental features that are not considered stable yet")
 
@@ -124,6 +145,7 @@ func DefaultToolsetGroup(readOnly bool, getClient GetClientFn, getGQLClient GetG
 	tsg.AddToolset(issues)
 	tsg.AddToolset(users)
 	tsg.AddToolset(pullRequests)
+	tsg.AddToolset(actions)
 	tsg.AddToolset(codeSecurity)
 	tsg.AddToolset(secretProtection)
 	tsg.AddToolset(notifications)
