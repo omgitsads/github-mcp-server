@@ -129,11 +129,6 @@ func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
 	tsg := github.DefaultToolsetGroup(cfg.ReadOnly, getClient, getGQLClient, getRawClient, cfg.Translator)
 	err = tsg.EnableToolsets(enabledToolsets)
 
-	if cfg.ToolHandlerWrapper != nil {
-		// If a custom tool handler wrapper is provided, use it
-		tsg.ToolHandlerWrapper = cfg.ToolHandlerWrapper
-	}
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to enable toolsets: %w", err)
 	}
@@ -143,7 +138,7 @@ func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
 
 	if cfg.DynamicToolsets {
 		dynamic := github.InitDynamicToolset(ghServer, tsg, cfg.Translator)
-		dynamic.RegisterTools(ghServer, cfg.ToolHandlerWrapper)
+		dynamic.RegisterTools(ghServer)
 	}
 
 	return ghServer, nil

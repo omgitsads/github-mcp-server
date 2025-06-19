@@ -1,11 +1,8 @@
 package toolsets
 
 import (
-	"context"
-	"errors"
 	"fmt"
 
-	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -83,16 +80,16 @@ func (t *Toolset) GetAvailableTools() []server.ServerTool {
 	return append(t.readTools, t.writeTools...)
 }
 
-func (t *Toolset) RegisterTools(s *server.MCPServer, toolHandlerWrapper ToolHandlerWrapper) {
+func (t *Toolset) RegisterTools(s *server.MCPServer) {
 	if !t.Enabled {
 		return
 	}
 	for _, tool := range t.readTools {
-		s.AddTool(tool.Tool, toolHandlerWrapper(tool.Handler))
+		s.AddTool(tool.Tool, tool.Handler)
 	}
 	if !t.readOnly {
 		for _, tool := range t.writeTools {
-			s.AddTool(tool.Tool, toolHandlerWrapper(tool.Handler))
+			s.AddTool(tool.Tool, tool.Handler)
 		}
 	}
 }
@@ -154,48 +151,13 @@ type ToolsetGroup struct {
 	Toolsets     map[string]*Toolset
 	everythingOn bool
 	readOnly     bool
-
-	// Tool handler function.
-	// This is used to wrap the toolset's tools with a handler function
-	// that can be used to process the tool calls.
-	// It allows for custom logic to be applied when the tool is called.
-	ToolHandlerWrapper func(server.ToolHandlerFunc) server.ToolHandlerFunc
-}
-
-// DefaultToolSetHandler is a default tool handler function that can be used
-// to handle tool calls in a generic way.
-var DefaultToolsetHandler = func(handler server.ToolHandlerFunc) server.ToolHandlerFunc {
-	// Default tool handler that simply calls the provided handler
-	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		res, err := handler(ctx, req)
-		if err != nil {
-			var apiErr *ghErrors.GitHubAPIError
-			if errors.As(err, &apiErr) {
-				// If the error is a GitHub API error, return it as an errored CallToolResult
-				apiRes := mcp.NewToolResultError(apiErr.Error())
-				return apiRes, nil
-			}
-
-			var graphqlErr *ghErrors.GitHubGraphQLError
-			if errors.As(err, &graphqlErr) {
-				// If the error is a GraphQL error, return it as an errored CallToolResult
-				graphqlRes := mcp.NewToolResultError(graphqlErr.Error())
-				return graphqlRes, nil
-			}
-
-			return nil, err
-		}
-
-		return res, nil
-	}
 }
 
 func NewToolsetGroup(readOnly bool) *ToolsetGroup {
 	return &ToolsetGroup{
-		Toolsets:           make(map[string]*Toolset),
-		ToolHandlerWrapper: DefaultToolsetHandler,
-		everythingOn:       false,
-		readOnly:           readOnly,
+		Toolsets:     make(map[string]*Toolset),
+		everythingOn: false,
+		readOnly:     readOnly,
 	}
 }
 
@@ -265,7 +227,7 @@ func (tg *ToolsetGroup) EnableToolset(name string) error {
 
 func (tg *ToolsetGroup) RegisterAll(s *server.MCPServer) {
 	for _, toolset := range tg.Toolsets {
-		toolset.RegisterTools(s, tg.ToolHandlerWrapper)
+		toolset.RegisterTools(s)
 		toolset.RegisterResourcesTemplates(s)
 	}
 }
