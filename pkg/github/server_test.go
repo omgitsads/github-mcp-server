@@ -135,7 +135,8 @@ func Test_RequiredStringParam(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := RequiredParam[string](request, tc.paramName)
 
 			if tc.expectError {
@@ -188,7 +189,8 @@ func Test_OptionalStringParam(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := OptionalParam[string](request, tc.paramName)
 
 			if tc.expectError {
@@ -234,7 +236,8 @@ func Test_RequiredInt(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := RequiredInt(request, tc.paramName)
 
 			if tc.expectError {
@@ -286,7 +289,8 @@ func Test_OptionalIntParam(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := OptionalIntParam(request, tc.paramName)
 
 			if tc.expectError {
@@ -344,7 +348,8 @@ func Test_OptionalNumberParamWithDefault(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := OptionalIntParamWithDefault(request, tc.paramName, tc.defaultVal)
 
 			if tc.expectError {
@@ -397,7 +402,8 @@ func Test_OptionalBooleanParam(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := OptionalParam[bool](request, tc.paramName)
 
 			if tc.expectError {
@@ -465,7 +471,8 @@ func TestOptionalStringArrayParam(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := OptionalStringArrayParam(request, tc.paramName)
 
 			if tc.expectError {
@@ -548,7 +555,8 @@ func TestOptionalPaginationParams(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.params)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.params)
 			result, err := OptionalPaginationParams(request)
 
 			if tc.expectError {

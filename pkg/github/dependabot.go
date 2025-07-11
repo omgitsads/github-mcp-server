@@ -9,44 +9,50 @@ import (
 
 	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/translations"
+	"github.com/github/github-mcp-server/pkg/utils"
 	"github.com/google/go-github/v72/github"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func GetDependabotAlert(getClient GetClientFn, t translations.TranslationHelperFunc) (tool mcp.Tool, handler server.ToolHandlerFunc) {
-	return mcp.NewTool(
-			"get_dependabot_alert",
-			mcp.WithDescription(t("TOOL_GET_DEPENDABOT_ALERT_DESCRIPTION", "Get details of a specific dependabot alert in a GitHub repository.")),
-			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+func GetDependabotAlert(getClient GetClientFn, t translations.TranslationHelperFunc) (tool *mcp.Tool, handler mcp.ToolHandler) {
+	return &mcp.Tool{
+			Name:        "get_dependabot_alert",
+			Description: t("TOOL_GET_DEPENDABOT_ALERT_DESCRIPTION", "Get details of a specific dependabot alert in a GitHub repository."),
+			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_GET_DEPENDABOT_ALERT_USER_TITLE", "Get dependabot alert"),
-				ReadOnlyHint: ToBoolPtr(true),
-			}),
-			mcp.WithString("owner",
-				mcp.Required(),
-				mcp.Description("The owner of the repository."),
-			),
-			mcp.WithString("repo",
-				mcp.Required(),
-				mcp.Description("The name of the repository."),
-			),
-			mcp.WithNumber("alertNumber",
-				mcp.Required(),
-				mcp.Description("The number of the alert."),
-			),
-		),
-		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				ReadOnlyHint: true,
+			},
+			InputSchema: &jsonschema.Schema{
+				Required: []string{"owner", "repo", "alertNumber"},
+				Properties: map[string]*jsonschema.Schema{
+					"owner": {
+						Type:        "string",
+						Description: "The owner of the repository.",
+					},
+					"repo": {
+						Type:        "string",
+						Description: "The name of the repository.",
+					},
+					"alertNumber": {
+						Type:        "number",
+						Description: "The number of the alert.",
+					},
+				},
+			},
+		},
+		func(ctx context.Context, session *mcp.ServerSession, request *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResult, error) {
 			owner, err := RequiredParam[string](request, "owner")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			repo, err := RequiredParam[string](request, "repo")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			alertNumber, err := RequiredInt(request, "alertNumber")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 
 			client, err := getClient(ctx)
@@ -69,7 +75,7 @@ func GetDependabotAlert(getClient GetClientFn, t translations.TranslationHelperF
 				if err != nil {
 					return nil, fmt.Errorf("failed to read response body: %w", err)
 				}
-				return mcp.NewToolResultError(fmt.Sprintf("failed to get alert: %s", string(body))), nil
+				return utils.NewToolResultError(fmt.Sprintf("failed to get alert: %s", string(body))), nil
 			}
 
 			r, err := json.Marshal(alert)
@@ -77,52 +83,59 @@ func GetDependabotAlert(getClient GetClientFn, t translations.TranslationHelperF
 				return nil, fmt.Errorf("failed to marshal alert: %w", err)
 			}
 
-			return mcp.NewToolResultText(string(r)), nil
+			return utils.NewToolResultText(string(r)), nil
 		}
 }
 
-func ListDependabotAlerts(getClient GetClientFn, t translations.TranslationHelperFunc) (tool mcp.Tool, handler server.ToolHandlerFunc) {
-	return mcp.NewTool(
-			"list_dependabot_alerts",
-			mcp.WithDescription(t("TOOL_LIST_DEPENDABOT_ALERTS_DESCRIPTION", "List dependabot alerts in a GitHub repository.")),
-			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+func ListDependabotAlerts(getClient GetClientFn, t translations.TranslationHelperFunc) (tool *mcp.Tool, handler mcp.ToolHandler) {
+	return &mcp.Tool{
+			Name:        "list_dependabot_alerts",
+			Description: t("TOOL_LIST_DEPENDABOT_ALERTS_DESCRIPTION", "List dependabot alerts in a GitHub repository."),
+			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_LIST_DEPENDABOT_ALERTS_USER_TITLE", "List dependabot alerts"),
-				ReadOnlyHint: ToBoolPtr(true),
-			}),
-			mcp.WithString("owner",
-				mcp.Required(),
-				mcp.Description("The owner of the repository."),
-			),
-			mcp.WithString("repo",
-				mcp.Required(),
-				mcp.Description("The name of the repository."),
-			),
-			mcp.WithString("state",
-				mcp.Description("Filter dependabot alerts by state. Defaults to open"),
-				mcp.DefaultString("open"),
-				mcp.Enum("open", "fixed", "dismissed", "auto_dismissed"),
-			),
-			mcp.WithString("severity",
-				mcp.Description("Filter dependabot alerts by severity"),
-				mcp.Enum("low", "medium", "high", "critical"),
-			),
-		),
-		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				ReadOnlyHint: true,
+			},
+			InputSchema: &jsonschema.Schema{
+				Required: []string{"owner", "repo"},
+				Properties: map[string]*jsonschema.Schema{
+					"owner": {
+						Type:        "string",
+						Description: "The owner of the repository.",
+					},
+					"repo": {
+						Type:        "string",
+						Description: "The name of the repository.",
+					},
+					"state": {
+						Type:        "string",
+						Description: "Filter dependabot alerts by state. Defaults to open",
+						Default:     json.RawMessage(`"open"`),
+						Enum:        []any{"open", "fixed", "dismissed", "auto_dismissed"},
+					},
+					"severity": {
+						Type:        "string",
+						Description: "Filter dependabot alerts by severity",
+						Enum:        []any{"low", "medium", "high", "critical"},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, session *mcp.ServerSession, request *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResult, error) {
 			owner, err := RequiredParam[string](request, "owner")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			repo, err := RequiredParam[string](request, "repo")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			state, err := OptionalParam[string](request, "state")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			severity, err := OptionalParam[string](request, "severity")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 
 			client, err := getClient(ctx)
@@ -148,7 +161,7 @@ func ListDependabotAlerts(getClient GetClientFn, t translations.TranslationHelpe
 				if err != nil {
 					return nil, fmt.Errorf("failed to read response body: %w", err)
 				}
-				return mcp.NewToolResultError(fmt.Sprintf("failed to list alerts: %s", string(body))), nil
+				return utils.NewToolResultError(fmt.Sprintf("failed to list alerts: %s", string(body))), nil
 			}
 
 			r, err := json.Marshal(alerts)
@@ -156,6 +169,6 @@ func ListDependabotAlerts(getClient GetClientFn, t translations.TranslationHelpe
 				return nil, fmt.Errorf("failed to marshal alerts: %w", err)
 			}
 
-			return mcp.NewToolResultText(string(r)), nil
+			return utils.NewToolResultText(string(r)), nil
 		}
 }

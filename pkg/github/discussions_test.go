@@ -156,8 +156,9 @@ func Test_ListDiscussions(t *testing.T) {
 			gqlClient := githubv4.NewClient(httpClient)
 			_, handler := ListDiscussions(stubGetGQLClientFn(gqlClient), translations.NullTranslationHelper)
 
-			req := createMCPRequest(tc.reqParams)
-			res, err := handler(context.Background(), req)
+			ctx := context.Background()
+			serverSession, req := createMCPRequest(ctx, tc.reqParams)
+			res, err := handler(ctx, serverSession, req)
 			text := getTextResult(t, res).Text
 
 			if tc.expectError {
@@ -255,8 +256,9 @@ func Test_GetDiscussion(t *testing.T) {
 			gqlClient := githubv4.NewClient(httpClient)
 			_, handler := GetDiscussion(stubGetGQLClientFn(gqlClient), translations.NullTranslationHelper)
 
-			req := createMCPRequest(map[string]interface{}{"owner": "owner", "repo": "repo", "discussionNumber": int32(1)})
-			res, err := handler(context.Background(), req)
+			ctx := context.Background()
+			serverSession, req := createMCPRequest(ctx, map[string]interface{}{"owner": "owner", "repo": "repo", "discussionNumber": int32(1)})
+			res, err := handler(ctx, serverSession, req)
 			text := getTextResult(t, res).Text
 
 			if tc.expectError {
@@ -320,13 +322,14 @@ func Test_GetDiscussionComments(t *testing.T) {
 	gqlClient := githubv4.NewClient(httpClient)
 	_, handler := GetDiscussionComments(stubGetGQLClientFn(gqlClient), translations.NullTranslationHelper)
 
-	request := createMCPRequest(map[string]interface{}{
+	ctx := context.Background()
+	serverSession, request := createMCPRequest(ctx, map[string]interface{}{
 		"owner":            "owner",
 		"repo":             "repo",
 		"discussionNumber": int32(1),
 	})
 
-	result, err := handler(context.Background(), request)
+	result, err := handler(ctx, serverSession, request)
 	require.NoError(t, err)
 
 	textContent := getTextResult(t, result)
@@ -377,8 +380,9 @@ func Test_ListDiscussionCategories(t *testing.T) {
 	assert.Contains(t, tool.InputSchema.Properties, "repo")
 	assert.ElementsMatch(t, tool.InputSchema.Required, []string{"owner", "repo"})
 
-	request := createMCPRequest(map[string]interface{}{"owner": "owner", "repo": "repo"})
-	result, err := handler(context.Background(), request)
+	ctx := context.Background()
+	serverSession, request := createMCPRequest(ctx, map[string]interface{}{"owner": "owner", "repo": "repo"})
+	result, err := handler(ctx, serverSession, request)
 	require.NoError(t, err)
 
 	text := getTextResult(t, result).Text

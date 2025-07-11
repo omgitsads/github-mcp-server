@@ -1,43 +1,42 @@
 {
   "annotations": {
-    "title": "Search code",
-    "readOnlyHint": true
+    "readOnlyHint": true,
+    "title": "Search code"
   },
   "description": "Search for code across GitHub repositories",
   "inputSchema": {
+    "required": [
+      "q"
+    ],
     "properties": {
       "order": {
+        "type": "string",
         "description": "Sort order",
         "enum": [
           "asc",
           "desc"
-        ],
-        "type": "string"
+        ]
       },
       "page": {
+        "type": "Number",
         "description": "Page number for pagination (min 1)",
-        "minimum": 1,
-        "type": "number"
+        "minimum": 1
       },
       "perPage": {
+        "type": "Number",
         "description": "Results per page for pagination (min 1, max 100)",
-        "maximum": 100,
         "minimum": 1,
-        "type": "number"
+        "maximum": 100
       },
       "q": {
-        "description": "Search query using GitHub code search syntax",
-        "type": "string"
+        "type": "string",
+        "description": "Search query using GitHub code search syntax"
       },
       "sort": {
-        "description": "Sort field ('indexed' only)",
-        "type": "string"
+        "type": "string",
+        "description": "Sort field ('indexed' only)"
       }
-    },
-    "required": [
-      "q"
-    ],
-    "type": "object"
+    }
   },
   "name": "search_code"
 }

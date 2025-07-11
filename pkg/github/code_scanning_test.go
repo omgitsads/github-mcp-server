@@ -87,10 +87,11 @@ func Test_GetCodeScanningAlert(t *testing.T) {
 			_, handler := GetCodeScanningAlert(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -213,10 +214,11 @@ func Test_ListCodeScanningAlerts(t *testing.T) {
 			_, handler := ListCodeScanningAlerts(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {

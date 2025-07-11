@@ -3,7 +3,6 @@ package ghmcp
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -14,12 +13,10 @@ import (
 
 	"github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/github"
-	mcplog "github.com/github/github-mcp-server/pkg/log"
 	"github.com/github/github-mcp-server/pkg/raw"
 	"github.com/github/github-mcp-server/pkg/translations"
 	gogithub "github.com/google/go-github/v72/github"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 )
@@ -49,7 +46,7 @@ type MCPServerConfig struct {
 	Translator translations.TranslationHelperFunc
 }
 
-func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
+func NewMCPServer(cfg MCPServerConfig) (*mcp.Server, error) {
 	apiHost, err := parseAPIHost(cfg.Host)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse API host: %w", err)
@@ -72,35 +69,14 @@ func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
 	} // We're going to wrap the Transport later in beforeInit
 	gqlClient := githubv4.NewEnterpriseClient(apiHost.graphqlURL.String(), gqlHTTPClient)
 
-	// When a client send an initialize request, update the user agent to include the client info.
-	beforeInit := func(_ context.Context, _ any, message *mcp.InitializeRequest) {
-		userAgent := fmt.Sprintf(
-			"github-mcp-server/%s (%s/%s)",
-			cfg.Version,
-			message.Params.ClientInfo.Name,
-			message.Params.ClientInfo.Version,
-		)
+	ghServer := mcp.NewServer(&mcp.Implementation{
+		Name:    "gh-mcp-server",
+		Title:   "GitHub MCP Server",
+		Version: cfg.Version,
+	}, &mcp.ServerOptions{})
 
-		restClient.UserAgent = userAgent
-
-		gqlHTTPClient.Transport = &userAgentTransport{
-			transport: gqlHTTPClient.Transport,
-			agent:     userAgent,
-		}
-	}
-
-	hooks := &server.Hooks{
-		OnBeforeInitialize: []server.OnBeforeInitializeFunc{beforeInit},
-		OnBeforeAny: []server.BeforeAnyHookFunc{
-			func(ctx context.Context, _ any, _ mcp.MCPMethod, _ any) {
-				// Ensure the context is cleared of any previous errors
-				// as context isn't propagated through middleware
-				errors.ContextWithGitHubErrors(ctx)
-			},
-		},
-	}
-
-	ghServer := github.NewServer(cfg.Version, server.WithHooks(hooks))
+	ghServer.AddReceivingMiddleware(InitializeUserAgentMiddleware[*mcp.ServerSession](cfg, restClient, gqlHTTPClient))
+	ghServer.AddReceivingMiddleware(ApiErrorMiddleware[*mcp.ServerSession]())
 
 	enabledToolsets := cfg.EnabledToolsets
 	if cfg.DynamicToolsets {
@@ -140,13 +116,55 @@ func NewMCPServer(cfg MCPServerConfig) (*server.MCPServer, error) {
 	// Register all mcp functionality with the server
 	tsg.RegisterAll(ghServer)
 
-	if cfg.DynamicToolsets {
-		dynamic := github.InitDynamicToolset(ghServer, tsg, cfg.Translator)
-		dynamic.RegisterTools(ghServer)
-	}
-
 	return ghServer, nil
 }
+
+func InitializeUserAgentMiddleware[S mcp.Session](cfg MCPServerConfig, restClient *gogithub.Client, gqlHTTPClient *http.Client) mcp.Middleware[S] {
+	return func(next mcp.MethodHandler[S]) mcp.MethodHandler[S] {
+		return func(ctx context.Context, session S, method string, params mcp.Params) (mcp.Result, error) {
+			// If this is an initialize request, we need to set the user agent
+			if method == "initialize" {
+				intializeParams, ok := params.(*mcp.InitializeParams)
+				if !ok {
+					return nil, fmt.Errorf("expected params to be of type *mcp.InitializeParams, got %T", params)
+				}
+
+				userAgent := fmt.Sprintf(
+					"github-mcp-server/%s (%s/%s)",
+					cfg.Version,
+					intializeParams.ClientInfo.Name,
+					intializeParams.ClientInfo.Version,
+				)
+
+				restClient.UserAgent = userAgent
+
+				gqlHTTPClient.Transport = &userAgentTransport{
+					transport: gqlHTTPClient.Transport,
+					agent:     userAgent,
+				}
+			}
+			return next(ctx, session, method, params)
+		}
+	}
+}
+
+func ApiErrorMiddleware[S mcp.Session]() mcp.Middleware[S] {
+	return func(next mcp.MethodHandler[S]) mcp.MethodHandler[S] {
+		return func(ctx context.Context, session S, method string, params mcp.Params) (mcp.Result, error) {
+			// Ensure the context is cleared of any previous errors
+			// as context isn't propagated through middleware
+			ctx = errors.ContextWithGitHubErrors(ctx)
+
+			// Call the next handler
+			return next(ctx, session, method, params)
+		}
+	}
+}
+
+// ghServer := github.NewServer(cfg.Version, server.WithHooks(hooks))
+
+// 	return ghServer, nil
+// }
 
 type StdioServerConfig struct {
 	// Version of the server
@@ -201,8 +219,6 @@ func RunStdioServer(cfg StdioServerConfig) error {
 		return fmt.Errorf("failed to create MCP server: %w", err)
 	}
 
-	stdioServer := server.NewStdioServer(ghServer)
-
 	logrusLogger := logrus.New()
 	if cfg.LogFilePath != "" {
 		file, err := os.OpenFile(cfg.LogFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
@@ -214,7 +230,6 @@ func RunStdioServer(cfg StdioServerConfig) error {
 		logrusLogger.SetOutput(file)
 	}
 	stdLogger := log.New(logrusLogger.Writer(), "stdioserver", 0)
-	stdioServer.SetErrorLogger(stdLogger)
 
 	if cfg.ExportTranslations {
 		// Once server is initialized, all translations are loaded
@@ -224,15 +239,18 @@ func RunStdioServer(cfg StdioServerConfig) error {
 	// Start listening for messages
 	errC := make(chan error, 1)
 	go func() {
-		in, out := io.Reader(os.Stdin), io.Writer(os.Stdout)
+		stdioTransport := mcp.NewStdioTransport()
+		loggingTransport := mcp.NewLoggingTransport(stdioTransport, stdLogger.Writer())
 
-		if cfg.EnableCommandLogging {
-			loggedIO := mcplog.NewIOLogger(in, out, logrusLogger)
-			in, out = loggedIO, loggedIO
-		}
+		// in, out := io.Reader(os.Stdin), io.Writer(os.Stdout)
+
+		// if cfg.EnableCommandLogging {
+		// 	loggedIO := mcplog.NewIOLogger(in, out, logrusLogger)
+		// 	in, out = loggedIO, loggedIO
+		// }
 		// enable GitHub errors in the context
 		ctx := errors.ContextWithGitHubErrors(ctx)
-		errC <- stdioServer.Listen(ctx, in, out)
+		errC <- ghServer.Run(ctx, loggingTransport)
 	}()
 
 	// Output github-mcp-server string

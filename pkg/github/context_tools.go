@@ -6,8 +6,8 @@ import (
 
 	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/translations"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/github/github-mcp-server/pkg/utils"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // UserDetails contains additional fields about a GitHub user not already
@@ -33,20 +33,20 @@ type UserDetails struct {
 }
 
 // GetMe creates a tool to get details of the authenticated user.
-func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (mcp.Tool, server.ToolHandlerFunc) {
-	tool := mcp.NewTool("get_me",
-		mcp.WithDescription(t("TOOL_GET_ME_DESCRIPTION", "Get details of the authenticated GitHub user. Use this when a request is about the user's own profile for GitHub. Or when information is missing to build other tool calls.")),
-		mcp.WithToolAnnotation(mcp.ToolAnnotation{
+func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (*mcp.Tool, mcp.ToolHandler) {
+	tool := &mcp.Tool{
+		Name:        "get_me",
+		Description: t("TOOL_GET_ME_DESCRIPTION", "Get details of the authenticated GitHub user. Use this when a request is about the user's own profile for GitHub. Or when information is missing to build other tool calls."),
+		Annotations: &mcp.ToolAnnotations{
 			Title:        t("TOOL_GET_ME_USER_TITLE", "Get my user profile"),
-			ReadOnlyHint: ToBoolPtr(true),
-		}),
-	)
+			ReadOnlyHint: true,
+		},
+	}
 
-	type args struct{}
-	handler := mcp.NewTypedToolHandler(func(ctx context.Context, _ mcp.CallToolRequest, _ args) (*mcp.CallToolResult, error) {
+	handler := func(ctx context.Context, session *mcp.ServerSession, request *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResult, error) {
 		client, err := getClient(ctx)
 		if err != nil {
-			return mcp.NewToolResultErrorFromErr("failed to get GitHub client", err), nil
+			return utils.NewToolResultErrorFromErr("failed to get GitHub client", err), nil
 		}
 
 		user, res, err := client.Users.Get(ctx, "")
@@ -86,7 +86,7 @@ func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (mcp.Too
 		}
 
 		return MarshalledTextResult(minimalUser), nil
-	})
+	}
 
 	return tool, handler
 }

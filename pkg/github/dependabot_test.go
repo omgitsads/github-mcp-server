@@ -87,10 +87,11 @@ func Test_GetDependabotAlert(t *testing.T) {
 			_, handler := GetDependabotAlert(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -240,9 +241,10 @@ func Test_ListDependabotAlerts(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := ListDependabotAlerts(stubGetClientFn(client), translations.NullTranslationHelper)
 
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			if tc.expectError {
 				require.NoError(t, err)

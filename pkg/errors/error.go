@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/github/github-mcp-server/pkg/utils"
 	"github.com/google/go-github/v72/github"
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type GitHubAPIError struct {
@@ -106,20 +107,20 @@ func addGitHubGraphQLErrorToContext(ctx context.Context, err *GitHubGraphQLError
 	return nil, fmt.Errorf("context does not contain GitHubCtxErrors")
 }
 
-// NewGitHubAPIErrorResponse returns an mcp.NewToolResultError and retains the error in the context for access via middleware
+// NewGitHubAPIErrorResponse returns an utils.NewToolResultError( and retains the error in the context for access via middleware
 func NewGitHubAPIErrorResponse(ctx context.Context, message string, resp *github.Response, err error) *mcp.CallToolResult {
 	apiErr := newGitHubAPIError(message, resp, err)
 	if ctx != nil {
 		_, _ = addGitHubAPIErrorToContext(ctx, apiErr) // Explicitly ignore error for graceful handling
 	}
-	return mcp.NewToolResultErrorFromErr(message, err)
+	return utils.NewToolResultErrorFromErr(message, err)
 }
 
-// NewGitHubGraphQLErrorResponse returns an mcp.NewToolResultError and retains the error in the context for access via middleware
+// NewGitHubGraphQLErrorResponse returns an utils.NewToolResultError( and retains the error in the context for access via middleware
 func NewGitHubGraphQLErrorResponse(ctx context.Context, message string, err error) *mcp.CallToolResult {
 	graphQLErr := newGitHubGraphQLError(message, err)
 	if ctx != nil {
 		_, _ = addGitHubGraphQLErrorToContext(ctx, graphQLErr) // Explicitly ignore error for graceful handling
 	}
-	return mcp.NewToolResultErrorFromErr(message, err)
+	return utils.NewToolResultErrorFromErr(message, err)
 }

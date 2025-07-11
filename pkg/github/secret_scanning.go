@@ -9,44 +9,50 @@ import (
 
 	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/translations"
+	"github.com/github/github-mcp-server/pkg/utils"
 	"github.com/google/go-github/v72/github"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func GetSecretScanningAlert(getClient GetClientFn, t translations.TranslationHelperFunc) (tool mcp.Tool, handler server.ToolHandlerFunc) {
-	return mcp.NewTool(
-			"get_secret_scanning_alert",
-			mcp.WithDescription(t("TOOL_GET_SECRET_SCANNING_ALERT_DESCRIPTION", "Get details of a specific secret scanning alert in a GitHub repository.")),
-			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+func GetSecretScanningAlert(getClient GetClientFn, t translations.TranslationHelperFunc) (tool *mcp.Tool, handler mcp.ToolHandler) {
+	return &mcp.Tool{
+			Name:        "get_secret_scanning_alert",
+			Description: t("TOOL_GET_SECRET_SCANNING_ALERT_DESCRIPTION", "Get details of a specific secret scanning alert in a GitHub repository."),
+			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_GET_SECRET_SCANNING_ALERT_USER_TITLE", "Get secret scanning alert"),
-				ReadOnlyHint: ToBoolPtr(true),
-			}),
-			mcp.WithString("owner",
-				mcp.Required(),
-				mcp.Description("The owner of the repository."),
-			),
-			mcp.WithString("repo",
-				mcp.Required(),
-				mcp.Description("The name of the repository."),
-			),
-			mcp.WithNumber("alertNumber",
-				mcp.Required(),
-				mcp.Description("The number of the alert."),
-			),
-		),
-		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				ReadOnlyHint: true,
+			},
+			InputSchema: &jsonschema.Schema{
+				Required: []string{"owner", "repo", "alertNumber"},
+				Properties: map[string]*jsonschema.Schema{
+					"owner": {
+						Type:        "string",
+						Description: t("TOOL_GET_SECRET_SCANNING_ALERT_OWNER_DESC", "The owner of the repository."),
+					},
+					"repo": {
+						Type:        "string",
+						Description: t("TOOL_GET_SECRET_SCANNING_ALERT_REPO_DESC", "The name of the repository."),
+					},
+					"alertNumber": {
+						Type:        "number",
+						Description: t("TOOL_GET_SECRET_SCANNING_ALERT_NUMBER_DESC", "The number of the alert."),
+					},
+				},
+			},
+		},
+		func(ctx context.Context, session *mcp.ServerSession, request *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResult, error) {
 			owner, err := RequiredParam[string](request, "owner")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			repo, err := RequiredParam[string](request, "repo")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			alertNumber, err := RequiredInt(request, "alertNumber")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 
 			client, err := getClient(ctx)
@@ -69,7 +75,7 @@ func GetSecretScanningAlert(getClient GetClientFn, t translations.TranslationHel
 				if err != nil {
 					return nil, fmt.Errorf("failed to read response body: %w", err)
 				}
-				return mcp.NewToolResultError(fmt.Sprintf("failed to get alert: %s", string(body))), nil
+				return utils.NewToolResultError(fmt.Sprintf("failed to get alert: %s", string(body))), nil
 			}
 
 			r, err := json.Marshal(alert)
@@ -77,58 +83,66 @@ func GetSecretScanningAlert(getClient GetClientFn, t translations.TranslationHel
 				return nil, fmt.Errorf("failed to marshal alert: %w", err)
 			}
 
-			return mcp.NewToolResultText(string(r)), nil
+			return utils.NewToolResultText(string(r)), nil
 		}
 }
 
-func ListSecretScanningAlerts(getClient GetClientFn, t translations.TranslationHelperFunc) (tool mcp.Tool, handler server.ToolHandlerFunc) {
-	return mcp.NewTool(
-			"list_secret_scanning_alerts",
-			mcp.WithDescription(t("TOOL_LIST_SECRET_SCANNING_ALERTS_DESCRIPTION", "List secret scanning alerts in a GitHub repository.")),
-			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+func ListSecretScanningAlerts(getClient GetClientFn, t translations.TranslationHelperFunc) (tool *mcp.Tool, handler mcp.ToolHandler) {
+	return &mcp.Tool{
+			Name:        "list_secret_scanning_alerts",
+			Description: t("TOOL_LIST_SECRET_SCANNING_ALERTS_DESCRIPTION", "List secret scanning alerts in a GitHub repository."),
+			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_LIST_SECRET_SCANNING_ALERTS_USER_TITLE", "List secret scanning alerts"),
-				ReadOnlyHint: ToBoolPtr(true),
-			}),
-			mcp.WithString("owner",
-				mcp.Required(),
-				mcp.Description("The owner of the repository."),
-			),
-			mcp.WithString("repo",
-				mcp.Required(),
-				mcp.Description("The name of the repository."),
-			),
-			mcp.WithString("state",
-				mcp.Description("Filter by state"),
-				mcp.Enum("open", "resolved"),
-			),
-			mcp.WithString("secret_type",
-				mcp.Description("A comma-separated list of secret types to return. All default secret patterns are returned. To return generic patterns, pass the token name(s) in the parameter."),
-			),
-			mcp.WithString("resolution",
-				mcp.Description("Filter by resolution"),
-				mcp.Enum("false_positive", "wont_fix", "revoked", "pattern_edited", "pattern_deleted", "used_in_tests"),
-			),
-		),
-		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				ReadOnlyHint: true,
+			},
+			InputSchema: &jsonschema.Schema{
+				Required: []string{"owner", "repo"},
+				Properties: map[string]*jsonschema.Schema{
+					"owner": {
+						Type:        "string",
+						Description: t("TOOL_LIST_SECRET_SCANNING_ALERTS_OWNER_DESC", "The owner of the repository."),
+					},
+					"repo": {
+						Type:        "string",
+						Description: t("TOOL_LIST_SECRET_SCANNING_ALERTS_REPO_DESC", "The name of the repository."),
+					},
+					"state": {
+						Type:        "string",
+						Description: t("TOOL_LIST_SECRET_SCANNING_ALERTS_STATE_DESC", "Filter by state"),
+						Enum:        []any{"open", "resolved"},
+					},
+					"secret_type": {
+						Type:        "string",
+						Description: t("TOOL_LIST_SECRET_SCANNING_ALERTS_SECRET_TYPE_DESC", "A comma-separated list of secret types to return. All default secret patterns are returned. To return generic patterns, pass the token name(s) in the parameter."),
+					},
+					"resolution": {
+						Type:        "string",
+						Description: t("TOOL_LIST_SECRET_SCANNING_ALERTS_RESOLUTION_DESC", "Filter by resolution"),
+						Enum:        []any{"false_positive", "wont_fix", "revoked", "pattern_edited", "pattern_deleted", "used_in_tests"},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, session *mcp.ServerSession, request *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResult, error) {
 			owner, err := RequiredParam[string](request, "owner")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			repo, err := RequiredParam[string](request, "repo")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			state, err := OptionalParam[string](request, "state")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			secretType, err := OptionalParam[string](request, "secret_type")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 			resolution, err := OptionalParam[string](request, "resolution")
 			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+				return utils.NewToolResultError(err.Error()), nil
 			}
 
 			client, err := getClient(ctx)
@@ -150,7 +164,7 @@ func ListSecretScanningAlerts(getClient GetClientFn, t translations.TranslationH
 				if err != nil {
 					return nil, fmt.Errorf("failed to read response body: %w", err)
 				}
-				return mcp.NewToolResultError(fmt.Sprintf("failed to list alerts: %s", string(body))), nil
+				return utils.NewToolResultError(fmt.Sprintf("failed to list alerts: %s", string(body))), nil
 			}
 
 			r, err := json.Marshal(alerts)
@@ -158,6 +172,6 @@ func ListSecretScanningAlerts(getClient GetClientFn, t translations.TranslationH
 				return nil, fmt.Errorf("failed to marshal alerts: %w", err)
 			}
 
-			return mcp.NewToolResultText(string(r)), nil
+			return utils.NewToolResultText(string(r)), nil
 		}
 }

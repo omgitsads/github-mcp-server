@@ -1,11 +1,13 @@
 package github
 
 import (
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"testing"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -108,58 +110,59 @@ func mockResponse(t *testing.T, code int, body interface{}) http.HandlerFunc {
 	}
 }
 
-// createMCPRequest is a helper function to create a MCP request with the given arguments.
-func createMCPRequest(args any) mcp.CallToolRequest {
-	return mcp.CallToolRequest{
-		Params: struct {
-			Name      string    `json:"name"`
-			Arguments any       `json:"arguments,omitempty"`
-			Meta      *mcp.Meta `json:"_meta,omitempty"`
-		}{
-			Arguments: args,
-		},
+var testImpl = &mcp.Implementation{Name: "test", Version: "v1.0.0"}
+
+// createSessions creates and connects an in-memory client and server session for testing purposes.
+func createSessions(ctx context.Context) (*mcp.ClientSession, *mcp.ServerSession, *mcp.Server) {
+	server := mcp.NewServer(testImpl, nil)
+	client := mcp.NewClient(testImpl, nil)
+	serverTransport, clientTransport := mcp.NewInMemoryTransports()
+	serverSession, err := server.Connect(ctx, serverTransport)
+	if err != nil {
+		log.Fatal(err)
 	}
+	clientSession, err := client.Connect(ctx, clientTransport)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return clientSession, serverSession, server
+}
+
+// createMCPRequest is a helper function to create a MCP request with the given arguments.
+func createMCPRequest(ctx context.Context, args map[string]any) (*mcp.ServerSession, *mcp.CallToolParamsFor[map[string]any]) {
+	_, serverSession, _ := createSessions(context.Background())
+	req := &mcp.CallToolParamsFor[map[string]any]{
+		Arguments: args,
+	}
+	return serverSession, req
 }
 
 // getTextResult is a helper function that returns a text result from a tool call.
-func getTextResult(t *testing.T, result *mcp.CallToolResult) mcp.TextContent {
+func getTextResult(t *testing.T, result *mcp.CallToolResult) *mcp.TextContent {
 	t.Helper()
 	assert.NotNil(t, result)
 	require.Len(t, result.Content, 1)
-	require.IsType(t, mcp.TextContent{}, result.Content[0])
-	textContent := result.Content[0].(mcp.TextContent)
-	assert.Equal(t, "text", textContent.Type)
+	require.IsType(t, &mcp.TextContent{}, result.Content[0])
+	textContent, ok := result.Content[0].(*mcp.TextContent)
+	assert.True(t, ok, "expected content to be of type *mcp.TextContent")
 	return textContent
 }
 
-func getErrorResult(t *testing.T, result *mcp.CallToolResult) mcp.TextContent {
+func getErrorResult(t *testing.T, result *mcp.CallToolResult) *mcp.TextContent {
 	res := getTextResult(t, result)
 	require.True(t, result.IsError, "expected tool call result to be an error")
 	return res
 }
 
-// getTextResourceResult is a helper function that returns a text result from a tool call.
-func getTextResourceResult(t *testing.T, result *mcp.CallToolResult) mcp.TextResourceContents {
+// getResourceResult is a helper function that returns a resource result from a tool call.
+func getResourceResult(t *testing.T, result *mcp.CallToolResult) *mcp.ResourceContents {
 	t.Helper()
 	assert.NotNil(t, result)
 	require.Len(t, result.Content, 2)
 	content := result.Content[1]
-	require.IsType(t, mcp.EmbeddedResource{}, content)
-	resource := content.(mcp.EmbeddedResource)
-	require.IsType(t, mcp.TextResourceContents{}, resource.Resource)
-	return resource.Resource.(mcp.TextResourceContents)
-}
-
-// getBlobResourceResult is a helper function that returns a blob result from a tool call.
-func getBlobResourceResult(t *testing.T, result *mcp.CallToolResult) mcp.BlobResourceContents {
-	t.Helper()
-	assert.NotNil(t, result)
-	require.Len(t, result.Content, 2)
-	content := result.Content[1]
-	require.IsType(t, mcp.EmbeddedResource{}, content)
-	resource := content.(mcp.EmbeddedResource)
-	require.IsType(t, mcp.BlobResourceContents{}, resource.Resource)
-	return resource.Resource.(mcp.BlobResourceContents)
+	embeddedResource, ok := content.(*mcp.EmbeddedResource)
+	require.True(t, ok, "expected content to be of type *mcp.EmbeddedResource")
+	return embeddedResource.Resource
 }
 
 func TestOptionalParamOK(t *testing.T) {
@@ -226,7 +229,8 @@ func TestOptionalParamOK(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := createMCPRequest(tc.args)
+			ctx := context.Background()
+			_, request := createMCPRequest(ctx, tc.args)
 
 			// Test with string type assertion
 			if _, isString := tc.expectedVal.(string); isString || tc.errorMsg == "parameter myParam is not of type string, is bool" {

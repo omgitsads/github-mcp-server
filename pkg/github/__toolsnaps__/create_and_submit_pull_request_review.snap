@@ -1,41 +1,9 @@
 {
   "annotations": {
-    "title": "Create and submit a pull request review without comments",
-    "readOnlyHint": false
+    "title": "Create and submit a pull request review without comments"
   },
   "description": "Create and submit a review for a pull request without review comments.",
   "inputSchema": {
-    "properties": {
-      "body": {
-        "description": "Review comment text",
-        "type": "string"
-      },
-      "commitID": {
-        "description": "SHA of commit to review",
-        "type": "string"
-      },
-      "event": {
-        "description": "Review action to perform",
-        "enum": [
-          "APPROVE",
-          "REQUEST_CHANGES",
-          "COMMENT"
-        ],
-        "type": "string"
-      },
-      "owner": {
-        "description": "Repository owner",
-        "type": "string"
-      },
-      "pullNumber": {
-        "description": "Pull request number",
-        "type": "number"
-      },
-      "repo": {
-        "description": "Repository name",
-        "type": "string"
-      }
-    },
     "required": [
       "owner",
       "repo",
@@ -43,7 +11,37 @@
       "body",
       "event"
     ],
-    "type": "object"
+    "properties": {
+      "body": {
+        "type": "string",
+        "description": "Review comment text"
+      },
+      "commitID": {
+        "type": "string",
+        "description": "SHA of commit to review"
+      },
+      "event": {
+        "type": "string",
+        "description": "Review action to perform",
+        "enum": [
+          "APPROVE",
+          "REQUEST_CHANGES",
+          "COMMENT"
+        ]
+      },
+      "owner": {
+        "type": "string",
+        "description": "Repository owner"
+      },
+      "pullNumber": {
+        "type": "number",
+        "description": "Pull request number"
+      },
+      "repo": {
+        "type": "string",
+        "description": "Repository name"
+      }
+    }
   },
   "name": "create_and_submit_pull_request_review"
 }

@@ -123,8 +123,9 @@ func Test_ListNotifications(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := ListNotifications(stubGetClientFn(client), translations.NullTranslationHelper)
-			request := createMCPRequest(tc.requestArgs)
-			result, err := handler(context.Background(), request)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
+			result, err := handler(ctx, session, request)
 
 			if tc.expectError {
 				require.NoError(t, err)
@@ -251,8 +252,9 @@ func Test_ManageNotificationSubscription(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := ManageNotificationSubscription(stubGetClientFn(client), translations.NullTranslationHelper)
-			request := createMCPRequest(tc.requestArgs)
-			result, err := handler(context.Background(), request)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
+			result, err := handler(ctx, session, request)
 
 			if tc.expectError {
 				require.NoError(t, err)
@@ -407,8 +409,9 @@ func Test_ManageRepositoryNotificationSubscription(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := ManageRepositoryNotificationSubscription(stubGetClientFn(client), translations.NullTranslationHelper)
-			request := createMCPRequest(tc.requestArgs)
-			result, err := handler(context.Background(), request)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
+			result, err := handler(ctx, session, request)
 
 			if tc.expectError {
 				require.NoError(t, err)
@@ -543,8 +546,9 @@ func Test_DismissNotification(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := DismissNotification(stubGetClientFn(client), translations.NullTranslationHelper)
-			request := createMCPRequest(tc.requestArgs)
-			result, err := handler(context.Background(), request)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
+			result, err := handler(ctx, session, request)
 
 			if tc.expectError {
 				// The tool returns a ToolResultError with a specific message
@@ -662,8 +666,9 @@ func Test_MarkAllNotificationsRead(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := MarkAllNotificationsRead(stubGetClientFn(client), translations.NullTranslationHelper)
-			request := createMCPRequest(tc.requestArgs)
-			result, err := handler(context.Background(), request)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
+			result, err := handler(ctx, session, request)
 
 			if tc.expectError {
 				require.NoError(t, err)
@@ -740,8 +745,9 @@ func Test_GetNotificationDetails(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := GetNotificationDetails(stubGetClientFn(client), translations.NullTranslationHelper)
-			request := createMCPRequest(tc.requestArgs)
-			result, err := handler(context.Background(), request)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
+			result, err := handler(ctx, session, request)
 
 			if tc.expectError {
 				require.NoError(t, err)

@@ -14,7 +14,7 @@ import (
 	"github.com/github/github-mcp-server/pkg/toolsets"
 	"github.com/github/github-mcp-server/pkg/translations"
 	gogithub "github.com/google/go-github/v72/github"
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/shurcooL/githubv4"
 	"github.com/spf13/cobra"
 )
@@ -217,7 +217,7 @@ func formatToolsetName(name string) string {
 	}
 }
 
-func generateToolDoc(tool mcp.Tool) string {
+func generateToolDoc(tool *mcp.Tool) string {
 	var lines []string
 
 	// Tool name only (using annotation name instead of verbose description)
@@ -245,25 +245,14 @@ func generateToolDoc(tool mcp.Tool) string {
 			typeStr := "unknown"
 			description := ""
 
-			if propMap, ok := prop.(map[string]interface{}); ok {
-				if typeVal, ok := propMap["type"].(string); ok {
-					if typeVal == "array" {
-						if items, ok := propMap["items"].(map[string]interface{}); ok {
-							if itemType, ok := items["type"].(string); ok {
-								typeStr = itemType + "[]"
-							}
-						} else {
-							typeStr = "array"
-						}
-					} else {
-						typeStr = typeVal
-					}
-				}
-
-				if desc, ok := propMap["description"].(string); ok {
-					description = desc
-				}
+			if prop.Type == "array" {
+				items := prop.Items
+				typeStr = items.Type + "[]" // Default to array type
+			} else {
+				typeStr = prop.Type
 			}
+
+			description = prop.Description
 
 			paramLine := fmt.Sprintf("  - `%s`: %s (%s, %s)", propName, description, typeStr, requiredStr)
 			lines = append(lines, paramLine)

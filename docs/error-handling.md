@@ -40,7 +40,7 @@ type GitHubGraphQLError struct {
 
 ### For GitHub REST API Errors
 
-Instead of directly returning `mcp.NewToolResultError()`, use:
+Instead of directly returning `utils.NewToolResultError()`, use:
 
 ```go
 return ghErrors.NewGitHubAPIErrorResponse(ctx, message, response, err), nil
@@ -100,7 +100,7 @@ func GetIssue(getClient GetClientFn, t translations.TranslationHelperFunc) (tool
         func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
             owner, err := RequiredParam[string](request, "owner")
             if err != nil {
-                return mcp.NewToolResultError(err.Error()), nil
+                return utils.NewToolResultError(err.Error()), nil
             }
             
             client, err := getClient(ctx)

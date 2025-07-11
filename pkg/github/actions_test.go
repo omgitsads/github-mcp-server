@@ -98,10 +98,11 @@ func Test_ListWorkflows(t *testing.T) {
 			_, handler := ListWorkflows(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -184,10 +185,11 @@ func Test_RunWorkflow(t *testing.T) {
 			_, handler := RunWorkflow(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -275,10 +277,11 @@ func Test_RunWorkflow_WithFilename(t *testing.T) {
 			_, handler := RunWorkflow(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -357,10 +360,11 @@ func Test_CancelWorkflowRun(t *testing.T) {
 			_, handler := CancelWorkflowRun(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -484,10 +488,11 @@ func Test_ListWorkflowRunArtifacts(t *testing.T) {
 			_, handler := ListWorkflowRunArtifacts(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -571,10 +576,11 @@ func Test_DownloadWorkflowRunArtifact(t *testing.T) {
 			_, handler := DownloadWorkflowRunArtifact(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -654,10 +660,11 @@ func Test_DeleteWorkflowRunLogs(t *testing.T) {
 			_, handler := DeleteWorkflowRunLogs(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -755,10 +762,11 @@ func Test_GetWorkflowRunUsage(t *testing.T) {
 			_, handler := GetWorkflowRunUsage(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -1016,10 +1024,11 @@ func Test_GetJobLogs(t *testing.T) {
 			_, handler := GetJobLogs(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectError, result.IsError)
@@ -1074,14 +1083,17 @@ func Test_GetJobLogs_WithContentReturn(t *testing.T) {
 	client := github.NewClient(mockedClient)
 	_, handler := GetJobLogs(stubGetClientFn(client), translations.NullTranslationHelper)
 
-	request := createMCPRequest(map[string]any{
+	// Create call request
+	ctx := context.Background()
+	serverSession, request := createMCPRequest(ctx, map[string]any{
 		"owner":          "owner",
 		"repo":           "repo",
 		"job_id":         float64(123),
 		"return_content": true,
 	})
 
-	result, err := handler(context.Background(), request)
+	// Call handler
+	result, err := handler(ctx, serverSession, request)
 	require.NoError(t, err)
 	require.False(t, result.IsError)
 
@@ -1121,7 +1133,8 @@ func Test_GetJobLogs_WithContentReturnAndTailLines(t *testing.T) {
 	client := github.NewClient(mockedClient)
 	_, handler := GetJobLogs(stubGetClientFn(client), translations.NullTranslationHelper)
 
-	request := createMCPRequest(map[string]any{
+	ctx := context.Background()
+	serverSession, request := createMCPRequest(ctx, map[string]any{
 		"owner":          "owner",
 		"repo":           "repo",
 		"job_id":         float64(123),
@@ -1129,7 +1142,7 @@ func Test_GetJobLogs_WithContentReturnAndTailLines(t *testing.T) {
 		"tail_lines":     float64(1), // Requesting last 1 line
 	})
 
-	result, err := handler(context.Background(), request)
+	result, err := handler(ctx, serverSession, request)
 	require.NoError(t, err)
 	require.False(t, result.IsError)
 

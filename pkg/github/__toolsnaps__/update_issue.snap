@@ -1,64 +1,62 @@
 {
   "annotations": {
-    "title": "Edit issue",
-    "readOnlyHint": false
+    "title": "Edit issue"
   },
   "description": "Update an existing issue in a GitHub repository.",
   "inputSchema": {
-    "properties": {
-      "assignees": {
-        "description": "New assignees",
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      },
-      "body": {
-        "description": "New description",
-        "type": "string"
-      },
-      "issue_number": {
-        "description": "Issue number to update",
-        "type": "number"
-      },
-      "labels": {
-        "description": "New labels",
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      },
-      "milestone": {
-        "description": "New milestone number",
-        "type": "number"
-      },
-      "owner": {
-        "description": "Repository owner",
-        "type": "string"
-      },
-      "repo": {
-        "description": "Repository name",
-        "type": "string"
-      },
-      "state": {
-        "description": "New state",
-        "enum": [
-          "open",
-          "closed"
-        ],
-        "type": "string"
-      },
-      "title": {
-        "description": "New title",
-        "type": "string"
-      }
-    },
     "required": [
       "owner",
       "repo",
       "issue_number"
     ],
-    "type": "object"
+    "properties": {
+      "assignees": {
+        "type": "array",
+        "description": "New assignees",
+        "items": {
+          "type": "string"
+        }
+      },
+      "body": {
+        "type": "string",
+        "description": "New description"
+      },
+      "issue_number": {
+        "type": "number",
+        "description": "Issue number to update"
+      },
+      "labels": {
+        "type": "array",
+        "description": "New labels",
+        "items": {
+          "type": "string"
+        }
+      },
+      "milestone": {
+        "type": "number",
+        "description": "New milestone number"
+      },
+      "owner": {
+        "type": "string",
+        "description": "Repository owner"
+      },
+      "repo": {
+        "type": "string",
+        "description": "Repository name"
+      },
+      "state": {
+        "type": "string",
+        "description": "New state",
+        "enum": [
+          "open",
+          "closed"
+        ]
+      },
+      "title": {
+        "type": "string",
+        "description": "New title"
+      }
+    }
   },
   "name": "update_issue"
 }

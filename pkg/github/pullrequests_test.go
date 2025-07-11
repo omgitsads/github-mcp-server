@@ -102,10 +102,11 @@ func Test_GetPullRequest(t *testing.T) {
 			_, handler := GetPullRequest(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -269,10 +270,11 @@ func Test_UpdatePullRequest(t *testing.T) {
 			_, handler := UpdatePullRequest(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError || tc.expectedErrMsg != "" {
@@ -415,10 +417,11 @@ func Test_ListPullRequests(t *testing.T) {
 			_, handler := ListPullRequests(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -534,10 +537,11 @@ func Test_MergePullRequest(t *testing.T) {
 			_, handler := MergePullRequest(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -764,10 +768,11 @@ func Test_SearchPullRequests(t *testing.T) {
 			_, handler := SearchPullRequests(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -905,10 +910,11 @@ func Test_GetPullRequestFiles(t *testing.T) {
 			_, handler := GetPullRequestFiles(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1069,10 +1075,11 @@ func Test_GetPullRequestStatus(t *testing.T) {
 			_, handler := GetPullRequestStatus(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1200,10 +1207,11 @@ func Test_UpdatePullRequestBranch(t *testing.T) {
 			_, handler := UpdatePullRequestBranch(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1320,10 +1328,11 @@ func Test_GetPullRequestComments(t *testing.T) {
 			_, handler := GetPullRequestComments(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1447,10 +1456,11 @@ func Test_GetPullRequestReviews(t *testing.T) {
 			_, handler := GetPullRequestReviews(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1602,10 +1612,11 @@ func Test_CreatePullRequest(t *testing.T) {
 			_, handler := CreatePullRequest(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1816,10 +1827,11 @@ func TestCreateAndSubmitPullRequestReview(t *testing.T) {
 			_, handler := CreateAndSubmitPullRequestReview(stubGetGQLClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 			require.NoError(t, err)
 
 			textContent := getTextResult(t, result)
@@ -1926,9 +1938,12 @@ func Test_RequestCopilotReview(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := RequestCopilotReview(stubGetClientFn(client), translations.NullTranslationHelper)
 
-			request := createMCPRequest(tc.requestArgs)
+			// Create call request
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
-			result, err := handler(context.Background(), request)
+			// Call handler
+			result, err := handler(ctx, serverSession, request)
 
 			if tc.expectError {
 				require.NoError(t, err)
@@ -2112,10 +2127,11 @@ func TestCreatePendingPullRequestReview(t *testing.T) {
 			_, handler := CreatePendingPullRequestReview(stubGetGQLClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 			require.NoError(t, err)
 
 			textContent := getTextResult(t, result)
@@ -2225,10 +2241,11 @@ func TestAddPullRequestReviewCommentToPendingReview(t *testing.T) {
 			_, handler := AddPullRequestReviewCommentToPendingReview(stubGetGQLClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 			require.NoError(t, err)
 
 			textContent := getTextResult(t, result)
@@ -2323,10 +2340,11 @@ func TestSubmitPendingPullRequestReview(t *testing.T) {
 			_, handler := SubmitPendingPullRequestReview(stubGetGQLClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 			require.NoError(t, err)
 
 			textContent := getTextResult(t, result)
@@ -2415,10 +2433,11 @@ func TestDeletePendingPullRequestReview(t *testing.T) {
 			_, handler := DeletePendingPullRequestReview(stubGetGQLClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 			require.NoError(t, err)
 
 			textContent := getTextResult(t, result)
@@ -2499,10 +2518,11 @@ index 5d6e7b2..8a4f5c3 100644
 			_, handler := GetPullRequestDiff(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 			require.NoError(t, err)
 
 			textContent := getTextResult(t, result)

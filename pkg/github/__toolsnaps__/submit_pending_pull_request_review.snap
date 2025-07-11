@@ -1,44 +1,42 @@
 {
   "annotations": {
-    "title": "Submit the requester's latest pending pull request review",
-    "readOnlyHint": false
+    "title": "Submit the requester's latest pending pull request review"
   },
   "description": "Submit the requester's latest pending pull request review, normally this is a final step after creating a pending review, adding comments first, unless you know that the user already did the first two steps, you should check before calling this.",
   "inputSchema": {
-    "properties": {
-      "body": {
-        "description": "The text of the review comment",
-        "type": "string"
-      },
-      "event": {
-        "description": "The event to perform",
-        "enum": [
-          "APPROVE",
-          "REQUEST_CHANGES",
-          "COMMENT"
-        ],
-        "type": "string"
-      },
-      "owner": {
-        "description": "Repository owner",
-        "type": "string"
-      },
-      "pullNumber": {
-        "description": "Pull request number",
-        "type": "number"
-      },
-      "repo": {
-        "description": "Repository name",
-        "type": "string"
-      }
-    },
     "required": [
       "owner",
       "repo",
       "pullNumber",
       "event"
     ],
-    "type": "object"
+    "properties": {
+      "body": {
+        "type": "string",
+        "description": "The text of the review comment, optional, if not provided, no body will be set."
+      },
+      "event": {
+        "type": "string",
+        "description": "The event to perform",
+        "enum": [
+          "APPROVE",
+          "REQUEST_CHANGES",
+          "COMMENT"
+        ]
+      },
+      "owner": {
+        "type": "string",
+        "description": "Repository owner"
+      },
+      "pullNumber": {
+        "type": "number",
+        "description": "Pull request number"
+      },
+      "repo": {
+        "type": "string",
+        "description": "Repository name"
+      }
+    }
   },
   "name": "submit_pending_pull_request_review"
 }

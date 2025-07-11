@@ -5,36 +5,40 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/github/github-mcp-server/pkg/utils"
 	"github.com/google/go-github/v72/github"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // NewServer creates a new GitHub MCP server with the specified GH client and logger.
 
-func NewServer(version string, opts ...server.ServerOption) *server.MCPServer {
+func NewServer(version string, opts *mcp.ServerOptions) *mcp.Server {
 	// Add default options
-	defaultOpts := []server.ServerOption{
-		server.WithToolCapabilities(true),
-		server.WithResourceCapabilities(true, true),
-		server.WithLogging(),
-	}
-	opts = append(defaultOpts, opts...)
+	// defaultOpts := []server.ServerOption{
+	// 	server.WithToolCapabilities(true),
+	// 	server.WithResourceCapabilities(true, true),
+	// 	server.WithLogging(),
+	// }
+	// opts = append(defaultOpts, opts...)
 
 	// Create a new MCP server
-	s := server.NewMCPServer(
-		"github-mcp-server",
-		version,
-		opts...,
+	s := mcp.NewServer(
+		&mcp.Implementation{
+			Name:    "github-mcp",
+			Title:   "GitHub MCP Server",
+			Version: version,
+		},
+		opts,
 	)
 	return s
 }
 
 // OptionalParamOK is a helper function that can be used to fetch a requested parameter from the request.
 // It returns the value, a boolean indicating if the parameter was present, and an error if the type is wrong.
-func OptionalParamOK[T any](r mcp.CallToolRequest, p string) (value T, ok bool, err error) {
+func OptionalParamOK[T any](params *mcp.CallToolParamsFor[map[string]any], p string) (value T, ok bool, err error) {
 	// Check if the parameter is present in the request
-	val, exists := r.GetArguments()[p]
+	val, exists := params.Arguments[p]
 	if !exists {
 		// Not present, return zero value, false, no error
 		return
@@ -65,16 +69,16 @@ func isAcceptedError(err error) bool {
 // 1. Checks if the parameter is present in the request.
 // 2. Checks if the parameter is of the expected type.
 // 3. Checks if the parameter is not empty, i.e: non-zero value
-func RequiredParam[T comparable](r mcp.CallToolRequest, p string) (T, error) {
+func RequiredParam[T comparable](params *mcp.CallToolParamsFor[map[string]any], p string) (T, error) {
 	var zero T
 
 	// Check if the parameter is present in the request
-	if _, ok := r.GetArguments()[p]; !ok {
+	if _, ok := params.Arguments[p]; !ok {
 		return zero, fmt.Errorf("missing required parameter: %s", p)
 	}
 
 	// Check if the parameter is of the expected type
-	val, ok := r.GetArguments()[p].(T)
+	val, ok := params.Arguments[p].(T)
 	if !ok {
 		return zero, fmt.Errorf("parameter %s is not of type %T", p, zero)
 	}
@@ -91,8 +95,8 @@ func RequiredParam[T comparable](r mcp.CallToolRequest, p string) (T, error) {
 // 1. Checks if the parameter is present in the request.
 // 2. Checks if the parameter is of the expected type.
 // 3. Checks if the parameter is not empty, i.e: non-zero value
-func RequiredInt(r mcp.CallToolRequest, p string) (int, error) {
-	v, err := RequiredParam[float64](r, p)
+func RequiredInt(params *mcp.CallToolParamsFor[map[string]any], p string) (int, error) {
+	v, err := RequiredParam[float64](params, p)
 	if err != nil {
 		return 0, err
 	}
@@ -103,28 +107,28 @@ func RequiredInt(r mcp.CallToolRequest, p string) (int, error) {
 // It does the following checks:
 // 1. Checks if the parameter is present in the request, if not, it returns its zero-value
 // 2. If it is present, it checks if the parameter is of the expected type and returns it
-func OptionalParam[T any](r mcp.CallToolRequest, p string) (T, error) {
+func OptionalParam[T any](params *mcp.CallToolParamsFor[map[string]any], p string) (T, error) {
 	var zero T
 
 	// Check if the parameter is present in the request
-	if _, ok := r.GetArguments()[p]; !ok {
+	if _, ok := params.Arguments[p]; !ok {
 		return zero, nil
 	}
 
 	// Check if the parameter is of the expected type
-	if _, ok := r.GetArguments()[p].(T); !ok {
-		return zero, fmt.Errorf("parameter %s is not of type %T, is %T", p, zero, r.GetArguments()[p])
+	if _, ok := params.Arguments[p].(T); !ok {
+		return zero, fmt.Errorf("parameter %s is not of type %T, is %T", p, zero, params.Arguments[p])
 	}
 
-	return r.GetArguments()[p].(T), nil
+	return params.Arguments[p].(T), nil
 }
 
 // OptionalIntParam is a helper function that can be used to fetch a requested parameter from the request.
 // It does the following checks:
 // 1. Checks if the parameter is present in the request, if not, it returns its zero-value
 // 2. If it is present, it checks if the parameter is of the expected type and returns it
-func OptionalIntParam(r mcp.CallToolRequest, p string) (int, error) {
-	v, err := OptionalParam[float64](r, p)
+func OptionalIntParam(params *mcp.CallToolParamsFor[map[string]any], p string) (int, error) {
+	v, err := OptionalParam[float64](params, p)
 	if err != nil {
 		return 0, err
 	}
@@ -133,8 +137,8 @@ func OptionalIntParam(r mcp.CallToolRequest, p string) (int, error) {
 
 // OptionalIntParamWithDefault is a helper function that can be used to fetch a requested parameter from the request
 // similar to optionalIntParam, but it also takes a default value.
-func OptionalIntParamWithDefault(r mcp.CallToolRequest, p string, d int) (int, error) {
-	v, err := OptionalIntParam(r, p)
+func OptionalIntParamWithDefault(params *mcp.CallToolParamsFor[map[string]any], p string, d int) (int, error) {
+	v, err := OptionalIntParam(params, p)
 	if err != nil {
 		return 0, err
 	}
@@ -148,13 +152,13 @@ func OptionalIntParamWithDefault(r mcp.CallToolRequest, p string, d int) (int, e
 // It does the following checks:
 // 1. Checks if the parameter is present in the request, if not, it returns its zero-value
 // 2. If it is present, iterates the elements and checks each is a string
-func OptionalStringArrayParam(r mcp.CallToolRequest, p string) ([]string, error) {
+func OptionalStringArrayParam(params *mcp.CallToolParamsFor[map[string]any], p string) ([]string, error) {
 	// Check if the parameter is present in the request
-	if _, ok := r.GetArguments()[p]; !ok {
+	if _, ok := params.Arguments[p]; !ok {
 		return []string{}, nil
 	}
 
-	switch v := r.GetArguments()[p].(type) {
+	switch v := params.Arguments[p].(type) {
 	case nil:
 		return []string{}, nil
 	case []string:
@@ -170,7 +174,7 @@ func OptionalStringArrayParam(r mcp.CallToolRequest, p string) ([]string, error)
 		}
 		return strSlice, nil
 	default:
-		return []string{}, fmt.Errorf("parameter %s could not be coerced to []string, is %T", p, r.GetArguments()[p])
+		return []string{}, fmt.Errorf("parameter %s could not be coerced to []string, is %T", p, params.Arguments[p])
 	}
 }
 
@@ -178,19 +182,21 @@ func OptionalStringArrayParam(r mcp.CallToolRequest, p string) ([]string, error)
 // The "page" parameter is optional, min 1.
 // The "perPage" parameter is optional, min 1, max 100. If unset, defaults to 30.
 // https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api
-func WithPagination() mcp.ToolOption {
-	return func(tool *mcp.Tool) {
-		mcp.WithNumber("page",
-			mcp.Description("Page number for pagination (min 1)"),
-			mcp.Min(1),
-		)(tool)
-
-		mcp.WithNumber("perPage",
-			mcp.Description("Results per page for pagination (min 1, max 100)"),
-			mcp.Min(1),
-			mcp.Max(100),
-		)(tool)
+func WithPagination(schema *jsonschema.Schema) *jsonschema.Schema {
+	schema.Properties["page"] = &jsonschema.Schema{
+		Type:        "Number",
+		Description: "Page number for pagination (min 1)",
+		Minimum:     jsonschema.Ptr(1.0),
 	}
+
+	schema.Properties["perPage"] = &jsonschema.Schema{
+		Type:        "Number",
+		Description: "Results per page for pagination (min 1, max 100)",
+		Minimum:     jsonschema.Ptr(1.0),
+		Maximum:     jsonschema.Ptr(100.0),
+	}
+
+	return schema
 }
 
 type PaginationParams struct {
@@ -203,12 +209,12 @@ type PaginationParams struct {
 // In future, we may want to make the default values configurable, or even have this
 // function returned from `withPagination`, where the defaults are provided alongside
 // the min/max values.
-func OptionalPaginationParams(r mcp.CallToolRequest) (PaginationParams, error) {
-	page, err := OptionalIntParamWithDefault(r, "page", 1)
+func OptionalPaginationParams(params *mcp.CallToolParamsFor[map[string]any]) (PaginationParams, error) {
+	page, err := OptionalIntParamWithDefault(params, "page", 1)
 	if err != nil {
 		return PaginationParams{}, err
 	}
-	perPage, err := OptionalIntParamWithDefault(r, "perPage", 30)
+	perPage, err := OptionalIntParamWithDefault(params, "perPage", 30)
 	if err != nil {
 		return PaginationParams{}, err
 	}
@@ -221,8 +227,8 @@ func OptionalPaginationParams(r mcp.CallToolRequest) (PaginationParams, error) {
 func MarshalledTextResult(v any) *mcp.CallToolResult {
 	data, err := json.Marshal(v)
 	if err != nil {
-		return mcp.NewToolResultErrorFromErr("failed to marshal text result to json", err)
+		return utils.NewToolResultErrorFromErr("failed to marshal text result to json", err)
 	}
 
-	return mcp.NewToolResultText(string(data))
+	return utils.NewToolResultText(string(data))
 }

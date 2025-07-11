@@ -22,7 +22,7 @@ func Test_GetMe(t *testing.T) {
 
 	// Verify some basic very important properties
 	assert.Equal(t, "get_me", tool.Name)
-	assert.True(t, *tool.Annotations.ReadOnlyHint, "get_me tool should be read-only")
+	assert.True(t, tool.Annotations.ReadOnlyHint, "get_me tool should be read-only")
 
 	// Setup mock user response
 	mockUser := &github.User{
@@ -107,8 +107,10 @@ func Test_GetMe(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, handler := GetMe(tc.stubbedGetClientFn, translations.NullTranslationHelper)
 
-			request := createMCPRequest(tc.requestArgs)
-			result, err := handler(context.Background(), request)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
+
+			result, err := handler(ctx, serverSession, request)
 			require.NoError(t, err)
 			textContent := getTextResult(t, result)
 

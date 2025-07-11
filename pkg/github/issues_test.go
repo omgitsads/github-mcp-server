@@ -89,10 +89,11 @@ func Test_GetIssue(t *testing.T) {
 			_, handler := GetIssue(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -193,10 +194,11 @@ func Test_AddIssueComment(t *testing.T) {
 			_, handler := AddIssueComment(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -430,10 +432,11 @@ func Test_SearchIssues(t *testing.T) {
 			_, handler := SearchIssues(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -585,10 +588,11 @@ func Test_CreateIssue(t *testing.T) {
 			_, handler := CreateIssue(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -778,10 +782,11 @@ func Test_ListIssues(t *testing.T) {
 			_, handler := ListIssues(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -963,10 +968,11 @@ func Test_UpdateIssue(t *testing.T) {
 			_, handler := UpdateIssue(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1182,10 +1188,11 @@ func Test_GetIssueComments(t *testing.T) {
 			_, handler := GetIssueComments(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1610,10 +1617,11 @@ func TestAssignCopilotToIssue(t *testing.T) {
 			_, handler := AssignCopilotToIssue(stubGetGQLClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 			require.NoError(t, err)
 
 			textContent := getTextResult(t, result)

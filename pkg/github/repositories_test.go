@@ -12,9 +12,10 @@ import (
 	"github.com/github/github-mcp-server/internal/toolsnaps"
 	"github.com/github/github-mcp-server/pkg/raw"
 	"github.com/github/github-mcp-server/pkg/translations"
+	"github.com/github/github-mcp-server/pkg/utils"
 	"github.com/google/go-github/v72/github"
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/migueleliasweb/go-github-mock/src/mock"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,6 +39,9 @@ func Test_GetFileContents(t *testing.T) {
 	// Mock response for raw content
 	mockRawContent := []byte("# Test Repository\n\nThis is a test repository.")
 
+	mockRawContentBlob := make([]byte, base64.StdEncoding.EncodedLen(len(mockRawContent)))
+	base64.StdEncoding.Encode(mockRawContentBlob, mockRawContent)
+
 	// Setup mock directory content for success case
 	mockDirContent := []*github.RepositoryContent{
 		{
@@ -58,13 +62,14 @@ func Test_GetFileContents(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		mockedClient   *http.Client
-		requestArgs    map[string]interface{}
-		expectError    bool
-		expectedResult interface{}
-		expectedErrMsg string
-		expectStatus   int
+		name                        string
+		mockedClient                *http.Client
+		requestArgs                 map[string]interface{}
+		expectError                 bool
+		expectedResult              interface{}
+		expectedResourceContentType string
+		expectedErrMsg              string
+		expectStatus                int
 	}{
 		{
 			name: "successful text content fetch",
@@ -84,11 +89,12 @@ func Test_GetFileContents(t *testing.T) {
 				"ref":   "refs/heads/main",
 			},
 			expectError: false,
-			expectedResult: mcp.TextResourceContents{
+			expectedResult: mcp.ResourceContents{
 				URI:      "repo://owner/repo/refs/heads/main/contents/README.md",
 				Text:     "# Test Repository\n\nThis is a test repository.",
 				MIMEType: "text/markdown",
 			},
+			expectedResourceContentType: "text",
 		},
 		{
 			name: "successful file blob content fetch",
@@ -108,11 +114,12 @@ func Test_GetFileContents(t *testing.T) {
 				"ref":   "refs/heads/main",
 			},
 			expectError: false,
-			expectedResult: mcp.BlobResourceContents{
+			expectedResult: mcp.ResourceContents{
 				URI:      "repo://owner/repo/refs/heads/main/contents/test.png",
-				Blob:     base64.StdEncoding.EncodeToString(mockRawContent),
+				Blob:     mockRawContentBlob,
 				MIMEType: "image/png",
 			},
+			expectedResourceContentType: "blob",
 		},
 		{
 			name: "successful directory content fetch",
@@ -165,7 +172,7 @@ func Test_GetFileContents(t *testing.T) {
 				"ref":   "refs/heads/main",
 			},
 			expectError:    false,
-			expectedResult: mcp.NewToolResultError("Failed to get file contents. The path does not point to a file or directory, or the file does not exist in the repository."),
+			expectedResult: utils.NewToolResultError("Failed to get file contents. The path does not point to a file or directory, or the file does not exist in the repository."),
 		},
 	}
 
@@ -177,10 +184,11 @@ func Test_GetFileContents(t *testing.T) {
 			_, handler := GetFileContents(stubGetClientFn(client), stubGetRawClientFn(mockRawClient), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -192,12 +200,15 @@ func Test_GetFileContents(t *testing.T) {
 			require.NoError(t, err)
 			// Use the correct result helper based on the expected type
 			switch expected := tc.expectedResult.(type) {
-			case mcp.TextResourceContents:
-				textResource := getTextResourceResult(t, result)
-				assert.Equal(t, expected, textResource)
-			case mcp.BlobResourceContents:
-				blobResource := getBlobResourceResult(t, result)
-				assert.Equal(t, expected, blobResource)
+			case mcp.ResourceContents:
+				switch tc.expectedResourceContentType {
+				case "text":
+					textResource := getResourceResult(t, result)
+					assert.Equal(t, expected.Text, textResource.Text)
+				case "blob":
+					blobResource := getResourceResult(t, result)
+					assert.Equal(t, expected.Blob, blobResource.Blob)
+				}
 			case []*github.RepositoryContent:
 				// Directory content fetch returns a text result (JSON array)
 				textContent := getTextResult(t, result)
@@ -295,10 +306,11 @@ func Test_ForkRepository(t *testing.T) {
 			_, handler := ForkRepository(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -485,10 +497,11 @@ func Test_CreateBranch(t *testing.T) {
 			_, handler := CreateBranch(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -611,10 +624,11 @@ func Test_GetCommit(t *testing.T) {
 			_, handler := GetCommit(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -790,10 +804,11 @@ func Test_ListCommits(t *testing.T) {
 			_, handler := ListCommits(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -956,10 +971,11 @@ func Test_CreateOrUpdateFile(t *testing.T) {
 			_, handler := CreateOrUpdateFile(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1108,10 +1124,11 @@ func Test_CreateRepository(t *testing.T) {
 			_, handler := CreateRepository(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1445,10 +1462,11 @@ func Test_PushFiles(t *testing.T) {
 			_, handler := PushFiles(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1560,10 +1578,11 @@ func Test_ListBranches(t *testing.T) {
 			_, handler := ListBranches(stubGetClientFn(mockClient), translations.NullTranslationHelper)
 
 			// Create request
-			request := createMCPRequest(tt.args)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tt.args)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 			if tt.wantErr {
 				require.Error(t, err)
 				if tt.errContains != "" {
@@ -1741,10 +1760,11 @@ func Test_DeleteFile(t *testing.T) {
 			_, handler := DeleteFile(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -1862,10 +1882,11 @@ func Test_ListTags(t *testing.T) {
 			_, handler := ListTags(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {
@@ -2016,10 +2037,11 @@ func Test_GetTag(t *testing.T) {
 			_, handler := GetTag(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			serverSession, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, serverSession, request)
 
 			// Verify results
 			if tc.expectError {

@@ -28,7 +28,7 @@ index 1c91d70..ac4ef2b 100644
 --- a/pkg/github/context_tools.go
 +++ b/pkg/github/context_tools.go
 @@ -39,6 +39,8 @@ func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (tool mc
-                                return mcp.NewToolResultError(fmt.Sprintf("failed to get user: %s", string(body))), nil
+                                return utils.NewToolResultError(fmt.Sprintf("failed to get user: %s", string(body))), nil
                         }
 
 +                       user.Login = sPtr("foobar")
@@ -37,7 +37,7 @@ index 1c91d70..ac4ef2b 100644
                         if err != nil {
                                 return nil, fmt.Errorf("failed to marshal user: %w", err)
 @@ -47,3 +49,7 @@ func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (tool mc
-                        return mcp.NewToolResultText(string(r)), nil
+                        return utils.NewToolResultText(string(r)), nil
                 }
  }
 +

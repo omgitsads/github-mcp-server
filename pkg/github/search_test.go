@@ -127,10 +127,11 @@ func Test_SearchRepositories(t *testing.T) {
 			_, handler := SearchRepositories(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -282,10 +283,11 @@ func Test_SearchCode(t *testing.T) {
 			_, handler := SearchCode(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -436,10 +438,11 @@ func Test_SearchUsers(t *testing.T) {
 			_, handler := SearchUsers(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -563,10 +566,11 @@ func Test_SearchOrgs(t *testing.T) {
 			_, handler := SearchOrgs(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {

@@ -3,8 +3,7 @@ package toolsets
 import (
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type ToolsetDoesNotExistError struct {
@@ -29,18 +28,23 @@ func NewToolsetDoesNotExistError(name string) *ToolsetDoesNotExistError {
 	return &ToolsetDoesNotExistError{Name: name}
 }
 
-func NewServerTool(tool mcp.Tool, handler server.ToolHandlerFunc) server.ServerTool {
-	return server.ServerTool{Tool: tool, Handler: handler}
+type ServerTool struct {
+	Tool    *mcp.Tool
+	Handler mcp.ToolHandler
 }
 
-func NewServerResourceTemplate(resourceTemplate mcp.ResourceTemplate, handler server.ResourceTemplateHandlerFunc) ServerResourceTemplate {
+func NewServerTool(tool *mcp.Tool, handler mcp.ToolHandler) ServerTool {
+	return ServerTool{Tool: tool, Handler: handler}
+}
+
+func NewServerResourceTemplate(resourceTemplate *mcp.ResourceTemplate, handler mcp.ResourceHandler) ServerResourceTemplate {
 	return ServerResourceTemplate{
 		resourceTemplate: resourceTemplate,
 		handler:          handler,
 	}
 }
 
-func NewServerPrompt(prompt mcp.Prompt, handler server.PromptHandlerFunc) ServerPrompt {
+func NewServerPrompt(prompt *mcp.Prompt, handler mcp.PromptHandler) ServerPrompt {
 	return ServerPrompt{
 		Prompt:  prompt,
 		Handler: handler,
@@ -49,14 +53,14 @@ func NewServerPrompt(prompt mcp.Prompt, handler server.PromptHandlerFunc) Server
 
 // ServerResourceTemplate represents a resource template that can be registered with the MCP server.
 type ServerResourceTemplate struct {
-	resourceTemplate mcp.ResourceTemplate
-	handler          server.ResourceTemplateHandlerFunc
+	resourceTemplate *mcp.ResourceTemplate
+	handler          mcp.ResourceHandler
 }
 
 // ServerPrompt represents a prompt that can be registered with the MCP server.
 type ServerPrompt struct {
-	Prompt  mcp.Prompt
-	Handler server.PromptHandlerFunc
+	Prompt  *mcp.Prompt
+	Handler mcp.PromptHandler
 }
 
 // Toolset represents a collection of MCP functionality that can be enabled or disabled as a group.
@@ -65,8 +69,8 @@ type Toolset struct {
 	Description string
 	Enabled     bool
 	readOnly    bool
-	writeTools  []server.ServerTool
-	readTools   []server.ServerTool
+	writeTools  []ServerTool
+	readTools   []ServerTool
 	// resources are not tools, but the community seems to be moving towards namespaces as a broader concept
 	// and in order to have multiple servers running concurrently, we want to avoid overlapping resources too.
 	resourceTemplates []ServerResourceTemplate
@@ -74,7 +78,7 @@ type Toolset struct {
 	prompts []ServerPrompt
 }
 
-func (t *Toolset) GetActiveTools() []server.ServerTool {
+func (t *Toolset) GetActiveTools() []ServerTool {
 	if t.Enabled {
 		if t.readOnly {
 			return t.readTools
@@ -84,14 +88,14 @@ func (t *Toolset) GetActiveTools() []server.ServerTool {
 	return nil
 }
 
-func (t *Toolset) GetAvailableTools() []server.ServerTool {
+func (t *Toolset) GetAvailableTools() []ServerTool {
 	if t.readOnly {
 		return t.readTools
 	}
 	return append(t.readTools, t.writeTools...)
 }
 
-func (t *Toolset) RegisterTools(s *server.MCPServer) {
+func (t *Toolset) RegisterTools(s *mcp.Server) {
 	if !t.Enabled {
 		return
 	}
@@ -126,7 +130,7 @@ func (t *Toolset) GetAvailableResourceTemplates() []ServerResourceTemplate {
 	return t.resourceTemplates
 }
 
-func (t *Toolset) RegisterResourcesTemplates(s *server.MCPServer) {
+func (t *Toolset) RegisterResourcesTemplates(s *mcp.Server) {
 	if !t.Enabled {
 		return
 	}
@@ -135,7 +139,7 @@ func (t *Toolset) RegisterResourcesTemplates(s *server.MCPServer) {
 	}
 }
 
-func (t *Toolset) RegisterPrompts(s *server.MCPServer) {
+func (t *Toolset) RegisterPrompts(s *mcp.Server) {
 	if !t.Enabled {
 		return
 	}
@@ -149,10 +153,10 @@ func (t *Toolset) SetReadOnly() {
 	t.readOnly = true
 }
 
-func (t *Toolset) AddWriteTools(tools ...server.ServerTool) *Toolset {
+func (t *Toolset) AddWriteTools(tools ...ServerTool) *Toolset {
 	// Silently ignore if the toolset is read-only to avoid any breach of that contract
 	for _, tool := range tools {
-		if *tool.Tool.Annotations.ReadOnlyHint {
+		if tool.Tool.Annotations.ReadOnlyHint {
 			panic(fmt.Sprintf("tool (%s) is incorrectly annotated as read-only", tool.Tool.Name))
 		}
 	}
@@ -162,9 +166,9 @@ func (t *Toolset) AddWriteTools(tools ...server.ServerTool) *Toolset {
 	return t
 }
 
-func (t *Toolset) AddReadTools(tools ...server.ServerTool) *Toolset {
+func (t *Toolset) AddReadTools(tools ...ServerTool) *Toolset {
 	for _, tool := range tools {
-		if !*tool.Tool.Annotations.ReadOnlyHint {
+		if !tool.Tool.Annotations.ReadOnlyHint {
 			panic(fmt.Sprintf("tool (%s) must be annotated as read-only", tool.Tool.Name))
 		}
 	}
@@ -250,7 +254,7 @@ func (tg *ToolsetGroup) EnableToolset(name string) error {
 	return nil
 }
 
-func (tg *ToolsetGroup) RegisterAll(s *server.MCPServer) {
+func (tg *ToolsetGroup) RegisterAll(s *mcp.Server) {
 	for _, toolset := range tg.Toolsets {
 		toolset.RegisterTools(s)
 		toolset.RegisterResourcesTemplates(s)

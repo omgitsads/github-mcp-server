@@ -83,10 +83,11 @@ func Test_GetSecretScanningAlert(t *testing.T) {
 			_, handler := GetSecretScanningAlert(stubGetClientFn(client), translations.NullTranslationHelper)
 
 			// Create call request
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
 			// Call handler
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			// Verify results
 			if tc.expectError {
@@ -215,9 +216,10 @@ func Test_ListSecretScanningAlerts(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
 			_, handler := ListSecretScanningAlerts(stubGetClientFn(client), translations.NullTranslationHelper)
 
-			request := createMCPRequest(tc.requestArgs)
+			ctx := context.Background()
+			session, request := createMCPRequest(ctx, tc.requestArgs)
 
-			result, err := handler(context.Background(), request)
+			result, err := handler(ctx, session, request)
 
 			if tc.expectError {
 				require.NoError(t, err)
