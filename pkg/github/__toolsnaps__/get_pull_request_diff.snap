@@ -1,5 +1,6 @@
 {
   "annotations": {
+    "readOnlyHint": true,
     "title": "Get pull request diff"
   },
   "description": "Get the diff of a pull request.",

@@ -1699,7 +1699,7 @@ func GetPullRequestDiff(getClient GetClientFn, t translations.TranslationHelperF
 			Description: t("TOOL_GET_PULL_REQUEST_DIFF_DESCRIPTION", "Get the diff of a pull request."),
 			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_GET_PULL_REQUEST_DIFF_USER_TITLE", "Get pull request diff"),
-				ReadOnlyHint: false,
+				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
 				Required: []string{"owner", "repo", "pullNumber"},
