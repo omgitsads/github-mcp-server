@@ -7,6 +7,7 @@ import (
 	ghErrors "github.com/github/github-mcp-server/pkg/errors"
 	"github.com/github/github-mcp-server/pkg/translations"
 	"github.com/github/github-mcp-server/pkg/utils"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -40,6 +41,12 @@ func GetMe(getClient GetClientFn, t translations.TranslationHelperFunc) (*mcp.To
 		Annotations: &mcp.ToolAnnotations{
 			Title:        t("TOOL_GET_ME_USER_TITLE", "Get my user profile"),
 			ReadOnlyHint: true,
+		},
+		InputSchema: &jsonschema.Schema{
+			Type:       "object",
+			Properties: map[string]*jsonschema.Schema{
+				// No input parameters needed, this tool just returns the authenticated user's details
+			},
 		},
 	}
 
