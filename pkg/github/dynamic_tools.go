@@ -30,6 +30,7 @@ func EnableToolset(s *mcp.Server, toolsetGroup *toolsets.ToolsetGroup, t transla
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"toolset"},
 				Properties: map[string]*jsonschema.Schema{
 					"toolset": {
@@ -69,6 +70,7 @@ func ListAvailableToolsets(toolsetGroup *toolsets.ToolsetGroup, t translations.T
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:       "object",
 				Properties: map[string]*jsonschema.Schema{},
 			},
 		},
@@ -107,6 +109,7 @@ func GetToolsetsTools(toolsetGroup *toolsets.ToolsetGroup, t translations.Transl
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"toolset"},
 				Properties: map[string]*jsonschema.Schema{
 					"toolset": {

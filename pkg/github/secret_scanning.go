@@ -24,6 +24,7 @@ func GetSecretScanningAlert(getClient GetClientFn, t translations.TranslationHel
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "alertNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -96,6 +97,7 @@ func ListSecretScanningAlerts(getClient GetClientFn, t translations.TranslationH
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {

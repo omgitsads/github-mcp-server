@@ -29,6 +29,7 @@ func GetCommit(getClient GetClientFn, t translations.TranslationHelperFunc) (too
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "sha"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -110,6 +111,7 @@ func ListCommits(getClient GetClientFn, t translations.TranslationHelperFunc) (t
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -207,6 +209,7 @@ func ListBranches(getClient GetClientFn, t translations.TranslationHelperFunc) (
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -283,6 +286,7 @@ func CreateOrUpdateFile(getClient GetClientFn, t translations.TranslationHelperF
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "path", "content", "message", "branch"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -403,6 +407,7 @@ func CreateRepository(getClient GetClientFn, t translations.TranslationHelperFun
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"name"},
 				Properties: map[string]*jsonschema.Schema{
 					"name": {
@@ -490,6 +495,7 @@ func GetFileContents(getClient GetClientFn, getRawClient raw.GetRawClientFn, t t
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "path"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -668,6 +674,7 @@ func ForkRepository(getClient GetClientFn, t translations.TranslationHelperFunc)
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -784,6 +791,7 @@ func DeleteFile(getClient GetClientFn, t translations.TranslationHelperFunc) (to
 				DestructiveHint: jsonschema.Ptr(true),
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "path", "message", "branch"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -960,6 +968,7 @@ func CreateBranch(getClient GetClientFn, t translations.TranslationHelperFunc) (
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "branch"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1068,6 +1077,7 @@ func PushFiles(getClient GetClientFn, t translations.TranslationHelperFunc) (too
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "branch", "files", "message"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1244,6 +1254,7 @@ func ListTags(getClient GetClientFn, t translations.TranslationHelperFunc) (tool
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1318,6 +1329,7 @@ func GetTag(getClient GetClientFn, t translations.TranslationHelperFunc) (tool *
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "tag"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {

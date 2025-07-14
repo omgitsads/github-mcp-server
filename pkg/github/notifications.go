@@ -25,33 +25,6 @@ const (
 
 // ListNotifications creates a tool to list notifications for the current user.
 func ListNotifications(getClient GetClientFn, t translations.TranslationHelperFunc) (tool *mcp.Tool, handler mcp.ToolHandler) {
-	schema := &jsonschema.Schema{
-		Properties: map[string]*jsonschema.Schema{
-			"filter": {
-				Type:        "string",
-				Description: "Filter notifications to, use default unless specified. Read notifications are ones that have already been acknowledged by the user. Participating notifications are those that the user is directly involved in, such as issues or pull requests they have commented on or created.",
-				Enum:        []any{FilterDefault, FilterIncludeRead, FilterOnlyParticipating},
-			},
-			"since": {
-				Type:        "string",
-				Description: "Only show notifications updated after the given time (ISO 8601 format)",
-			},
-			"before": {
-				Type:        "string",
-				Description: "Only show notifications updated before the given time (ISO 8601 format)",
-			},
-			"owner": {
-				Type:        "string",
-				Description: "Optional repository owner. If provided with repo, only notifications for this repository are listed.",
-			},
-			"repo": {
-				Type:        "string",
-				Description: "Optional repository name. If provided with owner, only notifications for this repository are listed.",
-			},
-		},
-	}
-	WithPagination(schema)
-
 	return &mcp.Tool{
 			Name:        "list_notifications",
 			Description: t("TOOL_LIST_NOTIFICATIONS_DESCRIPTION", "Lists all GitHub notifications for the authenticated user, including unread notifications, mentions, review requests, assignments, and updates on issues or pull requests. Use this tool whenever the user asks what to work on next, requests a summary of their GitHub activity, wants to see pending reviews, or needs to check for new updates or tasks. This tool is the primary way to discover actionable items, reminders, and outstanding work on GitHub. Always call this tool when asked what to work on next, what is pending, or what needs attention in GitHub."),
@@ -59,7 +32,32 @@ func ListNotifications(getClient GetClientFn, t translations.TranslationHelperFu
 				Title:        t("TOOL_LIST_NOTIFICATIONS_USER_TITLE", "List notifications"),
 				ReadOnlyHint: true,
 			},
-			InputSchema: schema,
+			InputSchema: WithPagination(&jsonschema.Schema{
+				Type: "object",
+				Properties: map[string]*jsonschema.Schema{
+					"filter": {
+						Type:        "string",
+						Description: "Filter notifications to, use default unless specified. Read notifications are ones that have already been acknowledged by the user. Participating notifications are those that the user is directly involved in, such as issues or pull requests they have commented on or created.",
+						Enum:        []any{FilterDefault, FilterIncludeRead, FilterOnlyParticipating},
+					},
+					"since": {
+						Type:        "string",
+						Description: "Only show notifications updated after the given time (ISO 8601 format)",
+					},
+					"before": {
+						Type:        "string",
+						Description: "Only show notifications updated before the given time (ISO 8601 format)",
+					},
+					"owner": {
+						Type:        "string",
+						Description: "Optional repository owner. If provided with repo, only notifications for this repository are listed.",
+					},
+					"repo": {
+						Type:        "string",
+						Description: "Optional repository name. If provided with owner, only notifications for this repository are listed.",
+					},
+				},
+			}),
 		},
 		func(ctx context.Context, session *mcp.ServerSession, request *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResult, error) {
 			client, err := getClient(ctx)
@@ -168,6 +166,7 @@ func DismissNotification(getclient GetClientFn, t translations.TranslationHelper
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"threadID"},
 				Properties: map[string]*jsonschema.Schema{
 					"threadID": {
@@ -245,6 +244,7 @@ func MarkAllNotificationsRead(getClient GetClientFn, t translations.TranslationH
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type: "object",
 				Properties: map[string]*jsonschema.Schema{
 					"lastReadAt": {
 						Type:        "string",
@@ -332,6 +332,7 @@ func GetNotificationDetails(getClient GetClientFn, t translations.TranslationHel
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"notificationID"},
 				Properties: map[string]*jsonschema.Schema{
 					"notificationID": {
@@ -396,6 +397,7 @@ func ManageNotificationSubscription(getClient GetClientFn, t translations.Transl
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"notificationID", "action"},
 				Properties: map[string]*jsonschema.Schema{
 					"notificationID": {
@@ -487,6 +489,7 @@ func ManageRepositoryNotificationSubscription(getClient GetClientFn, t translati
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "action"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {

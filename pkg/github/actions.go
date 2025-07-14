@@ -32,6 +32,7 @@ func ListWorkflows(getClient GetClientFn, t translations.TranslationHelperFunc) 
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type: "object",
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
 						Type:        "string",
@@ -97,6 +98,7 @@ func ListWorkflowRuns(getClient GetClientFn, t translations.TranslationHelperFun
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "workflow_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -277,6 +279,7 @@ func RunWorkflow(getClient GetClientFn, t translations.TranslationHelperFunc) (t
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "workflow_id", "ref"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -406,6 +409,7 @@ func GetWorkflowRun(getClient GetClientFn, t translations.TranslationHelperFunc)
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -468,6 +472,7 @@ func GetWorkflowRunLogs(getClient GetClientFn, t translations.TranslationHelperF
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -564,6 +569,7 @@ func ListWorkflowJobs(getClient GetClientFn, t translations.TranslationHelperFun
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -661,6 +667,7 @@ func GetJobLogs(getClient GetClientFn, t translations.TranslationHelperFunc) (to
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type: "object",
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
 						Type:        "string",
@@ -930,6 +937,7 @@ func RerunWorkflowRun(getClient GetClientFn, t translations.TranslationHelperFun
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -999,6 +1007,7 @@ func RerunFailedJobs(getClient GetClientFn, t translations.TranslationHelperFunc
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1068,6 +1077,7 @@ func CancelWorkflowRun(getClient GetClientFn, t translations.TranslationHelperFu
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1137,6 +1147,7 @@ func ListWorkflowRunArtifacts(getClient GetClientFn, t translations.TranslationH
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1211,6 +1222,7 @@ func DownloadWorkflowRunArtifact(getClient GetClientFn, t translations.Translati
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "artifact_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1283,6 +1295,7 @@ func DeleteWorkflowRunLogs(getClient GetClientFn, t translations.TranslationHelp
 				DestructiveHint: ToBoolPtr(true),
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1352,6 +1365,7 @@ func GetWorkflowRunUsage(getClient GetClientFn, t translations.TranslationHelper
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "run_id"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {

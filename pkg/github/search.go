@@ -24,6 +24,7 @@ func SearchRepositories(getClient GetClientFn, t translations.TranslationHelperF
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type: "object",
 				Properties: map[string]*jsonschema.Schema{
 					"query": {
 						Type:        "string",
@@ -91,6 +92,7 @@ func SearchCode(getClient GetClientFn, t translations.TranslationHelperFunc) (to
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type: "object",
 				Properties: map[string]*jsonschema.Schema{
 					"q": {
 						Type:        "string",
@@ -278,6 +280,7 @@ func SearchUsers(getClient GetClientFn, t translations.TranslationHelperFunc) (t
 			ReadOnlyHint: true,
 		},
 		InputSchema: WithPagination(&jsonschema.Schema{
+			Type: "object",
 			Properties: map[string]*jsonschema.Schema{
 				"query": {
 					Type:        "string",
@@ -309,6 +312,7 @@ func SearchOrgs(getClient GetClientFn, t translations.TranslationHelperFunc) (to
 			ReadOnlyHint: true,
 		},
 		InputSchema: WithPagination(&jsonschema.Schema{
+			Type: "object",
 			Properties: map[string]*jsonschema.Schema{
 				"query": {
 					Type:        "string",

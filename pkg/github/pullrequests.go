@@ -28,6 +28,7 @@ func GetPullRequest(getClient GetClientFn, t translations.TranslationHelperFunc)
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -100,6 +101,7 @@ func CreatePullRequest(getClient GetClientFn, t translations.TranslationHelperFu
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "title", "head", "base"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -228,6 +230,7 @@ func UpdatePullRequest(getClient GetClientFn, t translations.TranslationHelperFu
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -364,6 +367,7 @@ func ListPullRequests(getClient GetClientFn, t translations.TranslationHelperFun
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -494,6 +498,7 @@ func MergePullRequest(getClient GetClientFn, t translations.TranslationHelperFun
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -596,6 +601,7 @@ func SearchPullRequests(getClient GetClientFn, t translations.TranslationHelperF
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"query"},
 				Properties: map[string]*jsonschema.Schema{
 					"query": {
@@ -658,6 +664,7 @@ func GetPullRequestFiles(getClient GetClientFn, t translations.TranslationHelper
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -746,6 +753,7 @@ func GetPullRequestStatus(getClient GetClientFn, t translations.TranslationHelpe
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -837,6 +845,7 @@ func UpdatePullRequestBranch(getClient GetClientFn, t translations.TranslationHe
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -926,6 +935,7 @@ func GetPullRequestComments(getClient GetClientFn, t translations.TranslationHel
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1005,6 +1015,7 @@ func GetPullRequestReviews(getClient GetClientFn, t translations.TranslationHelp
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1076,6 +1087,7 @@ func CreateAndSubmitPullRequestReview(getGQLClient GetGQLClientFn, t translation
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber", "body", "event"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1183,6 +1195,7 @@ func CreatePendingPullRequestReview(getGQLClient GetGQLClientFn, t translations.
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1277,6 +1290,7 @@ func AddPullRequestReviewCommentToPendingReview(getGQLClient GetGQLClientFn, t t
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber", "path", "body", "subjectType"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1444,6 +1458,7 @@ func SubmitPendingPullRequestReview(getGQLClient GetGQLClientFn, t translations.
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber", "event"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1581,6 +1596,7 @@ func DeletePendingPullRequestReview(getGQLClient GetGQLClientFn, t translations.
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1702,6 +1718,7 @@ func GetPullRequestDiff(getClient GetClientFn, t translations.TranslationHelperF
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -1776,6 +1793,7 @@ func RequestCopilotReview(getClient GetClientFn, t translations.TranslationHelpe
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "pullNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {

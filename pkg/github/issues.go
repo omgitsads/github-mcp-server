@@ -28,6 +28,7 @@ func GetIssue(getClient GetClientFn, t translations.TranslationHelperFunc) (tool
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "issue_number"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -96,6 +97,7 @@ func AddIssueComment(getClient GetClientFn, t translations.TranslationHelperFunc
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "issue_number", "body"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -176,6 +178,7 @@ func SearchIssues(getClient GetClientFn, t translations.TranslationHelperFunc) (
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"query"},
 				Properties: map[string]*jsonschema.Schema{
 					"query": {
@@ -230,6 +233,7 @@ func CreateIssue(getClient GetClientFn, t translations.TranslationHelperFunc) (t
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "title"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -358,6 +362,7 @@ func ListIssues(getClient GetClientFn, t translations.TranslationHelperFunc) (to
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -487,6 +492,7 @@ func UpdateIssue(getClient GetClientFn, t translations.TranslationHelperFunc) (t
 				ReadOnlyHint: false,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "issue_number"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -641,6 +647,7 @@ func GetIssueComments(getClient GetClientFn, t translations.TranslationHelperFun
 				ReadOnlyHint: true,
 			},
 			InputSchema: WithPagination(&jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "issue_number"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -760,6 +767,7 @@ func AssignCopilotToIssue(getGQLClient GetGQLClientFn, t translations.Translatio
 				IdempotentHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "issueNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {

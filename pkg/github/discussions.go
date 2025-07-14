@@ -23,6 +23,7 @@ func ListDiscussions(getGQLClient GetGQLClientFn, t translations.TranslationHelp
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -168,6 +169,7 @@ func GetDiscussion(getGQLClient GetGQLClientFn, t translations.TranslationHelper
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "discussionNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -249,6 +251,7 @@ func GetDiscussionComments(getGQLClient GetGQLClientFn, t translations.Translati
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo", "discussionNumber"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
@@ -324,6 +327,7 @@ func ListDiscussionCategories(getGQLClient GetGQLClientFn, t translations.Transl
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
+				Type:     "object",
 				Required: []string{"owner", "repo"},
 				Properties: map[string]*jsonschema.Schema{
 					"owner": {
