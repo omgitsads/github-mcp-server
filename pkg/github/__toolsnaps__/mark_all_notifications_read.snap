@@ -4,6 +4,7 @@
   },
   "description": "Mark all notifications as read",
   "inputSchema": {
+    "type": "object",
     "properties": {
       "lastReadAt": {
         "type": "string",

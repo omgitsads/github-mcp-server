@@ -5,6 +5,7 @@
   },
   "description": "Search for code across GitHub repositories",
   "inputSchema": {
+    "type": "object",
     "required": [
       "q"
     ],

@@ -4,6 +4,7 @@
   },
   "description": "Create a new GitHub repository in your account",
   "inputSchema": {
+    "type": "object",
     "required": [
       "name"
     ],

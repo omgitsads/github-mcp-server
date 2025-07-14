@@ -5,6 +5,7 @@
   },
   "description": "List issues in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo"

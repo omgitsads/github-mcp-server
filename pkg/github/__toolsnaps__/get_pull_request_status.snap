@@ -5,6 +5,7 @@
   },
   "description": "Get the status of a specific pull request.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

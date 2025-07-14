@@ -5,6 +5,7 @@
   },
   "description": "Get comments for a specific issue in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

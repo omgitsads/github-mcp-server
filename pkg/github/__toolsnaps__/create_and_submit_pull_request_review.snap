@@ -4,6 +4,7 @@
   },
   "description": "Create and submit a review for a pull request without review comments.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

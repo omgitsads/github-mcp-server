@@ -4,6 +4,7 @@
   },
   "description": "Create a new branch in a GitHub repository",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

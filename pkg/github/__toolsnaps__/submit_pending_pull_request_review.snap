@@ -4,6 +4,7 @@
   },
   "description": "Submit the requester's latest pending pull request review, normally this is a final step after creating a pending review, adding comments first, unless you know that the user already did the first two steps, you should check before calling this.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

@@ -4,6 +4,7 @@
   },
   "description": "Add a comment to the requester's latest pending pull request review, a pending review needs to already exist to call this (check with the user if not sure).",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

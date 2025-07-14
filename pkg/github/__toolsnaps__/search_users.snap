@@ -5,6 +5,7 @@
   },
   "description": "Search for GitHub users exclusively",
   "inputSchema": {
+    "type": "object",
     "required": [
       "query"
     ],

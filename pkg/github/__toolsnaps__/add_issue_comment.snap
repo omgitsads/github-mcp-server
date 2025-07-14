@@ -4,6 +4,7 @@
   },
   "description": "Add a comment to a specific issue in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

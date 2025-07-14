@@ -4,6 +4,7 @@
   },
   "description": "Manage a notification subscription: ignore, watch, or delete a notification thread subscription.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "notificationID",
       "action"

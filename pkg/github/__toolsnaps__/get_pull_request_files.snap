@@ -5,6 +5,7 @@
   },
   "description": "Get the files changed in a specific pull request.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

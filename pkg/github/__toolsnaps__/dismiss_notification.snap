@@ -4,6 +4,7 @@
   },
   "description": "Dismiss a notification by marking it as read or done",
   "inputSchema": {
+    "type": "object",
     "required": [
       "threadID"
     ],

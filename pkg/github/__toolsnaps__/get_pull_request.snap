@@ -5,6 +5,7 @@
   },
   "description": "Get details of a specific pull request in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

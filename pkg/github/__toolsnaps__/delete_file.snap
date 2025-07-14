@@ -5,6 +5,7 @@
   },
   "description": "Delete a file from a GitHub repository",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

@@ -5,6 +5,7 @@
   },
   "description": "Search for GitHub repositories",
   "inputSchema": {
+    "type": "object",
     "required": [
       "query"
     ],

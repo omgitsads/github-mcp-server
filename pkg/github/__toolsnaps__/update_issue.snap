@@ -4,6 +4,7 @@
   },
   "description": "Update an existing issue in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

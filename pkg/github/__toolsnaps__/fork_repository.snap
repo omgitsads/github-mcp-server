@@ -4,6 +4,7 @@
   },
   "description": "Fork a GitHub repository to your account or specified organization",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo"

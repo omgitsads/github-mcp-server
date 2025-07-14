@@ -4,6 +4,7 @@
   },
   "description": "Update an existing pull request in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",

@@ -5,6 +5,7 @@
   },
   "description": "List code scanning alerts in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo"

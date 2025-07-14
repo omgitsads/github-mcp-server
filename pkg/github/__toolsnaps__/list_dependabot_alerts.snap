@@ -5,6 +5,7 @@
   },
   "description": "List dependabot alerts in a GitHub repository.",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo"

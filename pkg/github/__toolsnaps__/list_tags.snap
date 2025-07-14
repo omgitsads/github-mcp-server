@@ -5,6 +5,7 @@
   },
   "description": "List git tags in a GitHub repository",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo"

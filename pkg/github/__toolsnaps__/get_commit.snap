@@ -5,6 +5,7 @@
   },
   "description": "Get details for a commit from a GitHub repository",
   "inputSchema": {
+    "type": "object",
     "required": [
       "owner",
       "repo",
