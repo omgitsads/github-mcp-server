@@ -27,6 +27,7 @@ const (
 type model struct {
 	state          state
 	tag            string
+	remote         string
 	currentBranch  string
 	latestTag      string
 	errors         []string
@@ -101,10 +102,11 @@ var (
 				Padding(0, 2)
 )
 
-func initialModel(tag string, testMode bool) model {
+func initialModel(tag, remote string, testMode bool) model {
 	return model{
 		state:    stateValidating,
 		tag:      tag,
+		remote:   remote,
 		testMode: testMode,
 	}
 }
@@ -112,7 +114,7 @@ func initialModel(tag string, testMode bool) model {
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		tea.EnterAltScreen,
-		performValidation(m.tag, "tag-release-charmbracelet", m.testMode),
+		performValidation(m.tag, "tag-release-charmbracelet", m.remote, m.testMode),
 	)
 }
 
@@ -131,7 +133,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.state == stateConfirming {
 				m.confirmed = true
 				m.state = stateExecuting
-				return m, performExecution(m.tag, m.testMode)
+				return m, performExecution(m.tag, m.remote, m.testMode)
 			}
 		case "n", "N":
 			if m.state == stateConfirming {
@@ -238,6 +240,7 @@ func (m model) renderConfirming() string {
 
 	// Summary box
 	summaryContent := fmt.Sprintf("Repository: %s\n", highlightStyle.Render(m.repoSlug))
+	summaryContent += fmt.Sprintf("Remote: %s\n", highlightStyle.Render(m.remote))
 	summaryContent += fmt.Sprintf("Current branch: %s\n", highlightStyle.Render(m.currentBranch))
 	if m.latestTag != "" {
 		summaryContent += fmt.Sprintf("Latest release: %s\n", highlightStyle.Render(m.latestTag))
@@ -255,9 +258,9 @@ func (m model) renderConfirming() string {
 
 	steps := []string{
 		fmt.Sprintf("Create release tag: %s", m.tag),
-		fmt.Sprintf("Push tag %s to origin", m.tag),
+		fmt.Sprintf("Push tag %s to %s", m.tag, m.remote),
 		"Update 'latest-release' tag",
-		"Push 'latest-release' tag to origin",
+		fmt.Sprintf("Push 'latest-release' tag to %s", m.remote),
 	}
 
 	for _, step := range steps {
@@ -291,9 +294,9 @@ func (m model) renderExecuting() string {
 
 	steps := []string{
 		fmt.Sprintf("Creating tag %s", m.tag),
-		fmt.Sprintf("Pushing tag %s to origin", m.tag),
+		fmt.Sprintf("Pushing tag %s to %s", m.tag, m.remote),
 		"Updating 'latest-release' tag",
-		"Pushing 'latest-release' tag to origin",
+		fmt.Sprintf("Pushing 'latest-release' tag to %s", m.remote),
 	}
 
 	for i, step := range steps {
@@ -364,7 +367,7 @@ func (m model) renderError() string {
 }
 
 // Command functions
-func performValidation(tag, allowedBranch string, testMode bool) tea.Cmd {
+func performValidation(tag, allowedBranch, remote string, testMode bool) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		errors := []string{}
 		data := make(map[string]string)
@@ -393,13 +396,13 @@ func performValidation(tag, allowedBranch string, testMode bool) tea.Cmd {
 			}
 		}
 
-		// 3. Fetch latest from origin
-		cmd = exec.Command("git", "fetch", "origin", allowedBranch)
+		// 3. Fetch latest from remote
+		cmd = exec.Command("git", "fetch", remote, allowedBranch)
 		if err := cmd.Run(); err != nil {
 			if testMode {
-				errors = append(errors, fmt.Sprintf("WARNING: Failed to fetch latest changes from origin/%s, but continuing in test mode", allowedBranch))
+				errors = append(errors, fmt.Sprintf("WARNING: Failed to fetch latest changes from %s/%s, but continuing in test mode", remote, allowedBranch))
 			} else {
-				errors = append(errors, fmt.Sprintf("Failed to fetch latest changes from origin/%s", allowedBranch))
+				errors = append(errors, fmt.Sprintf("Failed to fetch latest changes from %s/%s", remote, allowedBranch))
 			}
 		}
 
@@ -424,9 +427,9 @@ func performValidation(tag, allowedBranch string, testMode bool) tea.Cmd {
 
 		if string(localSha) != string(remoteSha) {
 			if testMode {
-				errors = append(errors, fmt.Sprintf("WARNING: Local '%s' branch is not up-to-date with 'origin/%s', but continuing in test mode", allowedBranch, allowedBranch))
+				errors = append(errors, fmt.Sprintf("WARNING: Local '%s' branch is not up-to-date with '%s/%s', but continuing in test mode", allowedBranch, remote, allowedBranch))
 			} else {
-				errors = append(errors, fmt.Sprintf("Your local '%s' branch is not up-to-date with 'origin/%s'. Please pull the latest changes", allowedBranch, allowedBranch))
+				errors = append(errors, fmt.Sprintf("Your local '%s' branch is not up-to-date with '%s/%s'. Please pull the latest changes", allowedBranch, remote, allowedBranch))
 			}
 		}
 
@@ -445,13 +448,13 @@ func performValidation(tag, allowedBranch string, testMode bool) tea.Cmd {
 			}
 		}
 
-		cmd = exec.Command("git", "ls-remote", "--tags", "origin")
+		cmd = exec.Command("git", "ls-remote", "--tags", remote)
 		output, err = cmd.Output()
 		if err != nil {
-			errors = append(errors, "Failed to check remote tags")
+			errors = append(errors, fmt.Sprintf("Failed to check remote tags on %s", remote))
 		} else {
 			if strings.Contains(string(output), "refs/tags/"+tag) {
-				errors = append(errors, fmt.Sprintf("Tag %s already exists on remote 'origin'", tag))
+				errors = append(errors, fmt.Sprintf("Tag %s already exists on remote '%s'", tag, remote))
 			}
 		}
 
@@ -466,7 +469,7 @@ func performValidation(tag, allowedBranch string, testMode bool) tea.Cmd {
 		}
 
 		// Get repository slug
-		cmd = exec.Command("git", "remote", "get-url", "origin")
+		cmd = exec.Command("git", "remote", "get-url", remote)
 		output, err = cmd.Output()
 		if err == nil {
 			repoUrl := strings.TrimSpace(string(output))
@@ -491,7 +494,7 @@ func performValidation(tag, allowedBranch string, testMode bool) tea.Cmd {
 	})
 }
 
-func performExecution(tag string, testMode bool) tea.Cmd {
+func performExecution(tag, remote string, testMode bool) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		errors := []string{}
 
@@ -508,9 +511,9 @@ func performExecution(tag string, testMode bool) tea.Cmd {
 		}
 
 		// Step 1: Push the tag
-		cmd = exec.Command("git", "push", "origin", tag)
+		cmd = exec.Command("git", "push", remote, tag)
 		if err := cmd.Run(); err != nil {
-			errors = append(errors, fmt.Sprintf("Failed to push tag %s: %v", tag, err))
+			errors = append(errors, fmt.Sprintf("Failed to push tag %s to %s: %v", tag, remote, err))
 			return executionCompleteMsg{success: false, errors: errors}
 		}
 
@@ -522,9 +525,9 @@ func performExecution(tag string, testMode bool) tea.Cmd {
 		}
 
 		// Step 3: Push latest-release tag
-		cmd = exec.Command("git", "push", "origin", "latest-release", "--force")
+		cmd = exec.Command("git", "push", remote, "latest-release", "--force")
 		if err := cmd.Run(); err != nil {
-			errors = append(errors, fmt.Sprintf("Failed to push latest-release tag: %v", err))
+			errors = append(errors, fmt.Sprintf("Failed to push latest-release tag to %s: %v", remote, err))
 			return executionCompleteMsg{success: false, errors: errors}
 		}
 
@@ -535,28 +538,40 @@ func performExecution(tag string, testMode bool) tea.Cmd {
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Error: No tag specified.")
-		fmt.Println("Usage: tag-release-tui vX.Y.Z [--test]")
+		fmt.Println("Usage: tag-release-tui vX.Y.Z [--remote <remote-name>] [--test]")
+		fmt.Println("  --remote: Specify git remote name (default: origin)")
 		fmt.Println("  --test: Run in test mode (validation only, no actual changes)")
 		os.Exit(1)
 	}
 
 	tag := os.Args[1]
 	testMode := false
-
-	// Check for test flag
+	remote := "origin" // default remote
+	
+	// Parse flags
 	for i := 2; i < len(os.Args); i++ {
-		if os.Args[i] == "--test" || os.Args[i] == "-t" {
+		switch os.Args[i] {
+		case "--test", "-t":
 			testMode = true
-			break
+		case "--remote", "-r":
+			if i+1 < len(os.Args) {
+				remote = os.Args[i+1]
+				i++ // skip next arg
+			} else {
+				fmt.Println("Error: --remote flag requires a value")
+				os.Exit(1)
+			}
 		}
 	}
-
+	
 	if testMode {
-		fmt.Println("🧪 Running in TEST MODE - no actual changes will be made")
+		fmt.Printf("🧪 Running in TEST MODE - no actual changes will be made (remote: %s)\n", remote)
+	} else {
+		fmt.Printf("🚀 Running release process (remote: %s)\n", remote)
 	}
-
+	
 	p := tea.NewProgram(
-		initialModel(tag, testMode),
+		initialModel(tag, remote, testMode),
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)

@@ -2,30 +2,39 @@
 
 A terminal user interface (TUI) for creating GitHub releases using Charmbracelet's Bubbletea library.
 
+## Building
+
+```bash
+# Build the application into bin/ directory (ignored by git)
+go build -o bin/tag-release-tui ./cmd/tag-release-tui
+```
+
 ## Usage
 
 ```bash
-# Build the application
-go build -o tag-release-tui ./cmd/tag-release-tui
+# Basic usage with default remote (origin)
+./bin/tag-release-tui v1.2.3
 
-# Run with a version tag
-./tag-release-tui v1.2.3
+# Specify a different remote (e.g., your fork)
+./bin/tag-release-tui v1.2.3 --remote omgitsads
 
 # Run in test mode (validation only, no actual changes)
-./tag-release-tui v1.2.3 --test
+./bin/tag-release-tui v1.2.3 --test
 
-# Or use the convenience script
-./run-tag-release-tui.sh v1.2.3 --test
+# Test with a specific remote
+./bin/tag-release-tui v1.2.3 --remote omgitsads --test
 ```
 
 ## Features
 
 - **Interactive Validation**: Shows real-time validation of release requirements
 - **Test Mode**: Run with `--test` flag to validate without making any actual changes
+- **Remote Selection**: Specify git remote with `--remote` flag (default: origin)
 - **Flexible Branch Support**: Can be configured to work with any branch (currently set to `tag-release-charmbracelet`)
 - **Confirmation Screen**: Displays a summary and asks for confirmation before proceeding
 - **Live Execution**: Shows progress as the release is being created
 - **Post-Release Instructions**: Provides next steps after successful release creation
+- **Safe Testing**: Perfect for testing against your fork without affecting upstream
 
 ## Flow
 
