@@ -74,7 +74,7 @@ go build -o bin/tag-release-tui ./cmd/tag-release-tui
 Use the `--test` flag to run the application in test mode:
 
 ```bash
-./tag-release-tui v1.2.3 --test
+./bin/tag-release-tui v1.2.3 --test
 ```
 
 In test mode, the application will:
@@ -88,6 +88,23 @@ This is perfect for:
 - Validating release requirements without risk
 - Training or demonstration purposes
 - CI/CD validation workflows
+
+## Remote Selection
+
+Use the `--remote` flag to specify which git remote to use:
+
+```bash
+# Test against your fork instead of upstream
+./bin/tag-release-tui v1.2.3 --remote omgitsads --test
+
+# Actually release to your fork (be careful!)
+./bin/tag-release-tui v1.2.3 --remote omgitsads
+```
+
+This is especially useful for:
+- Testing against your personal fork
+- Avoiding accidental releases to upstream repositories
+- Working in organizations with multiple remotes
 
 ## Error Handling
 
@@ -113,6 +130,15 @@ This TUI version provides the same functionality as the original `script/tag-rel
 
 Currently configured for:
 - **Allowed Branch**: `tag-release-charmbracelet` (for development/testing)
+- **Default Remote**: `origin` (can be overridden with `--remote` flag)
 - **Target Branch**: Can be modified in the source code for production use
 
 To use with the main branch in production, change the `allowedBranch` parameter in the `performValidation` call.
+
+## Safety Features
+
+- **Build Location**: Application builds to `bin/` directory (ignored by git)
+- **Remote Selection**: Safely test against your fork instead of upstream
+- **Test Mode**: Comprehensive validation without making changes
+- **Clear Confirmation**: Shows exactly what will happen before proceeding
+- **Error Prevention**: Validates all requirements before starting
