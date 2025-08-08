@@ -33,6 +33,7 @@ go build -o bin/tag-release-tui ./cmd/tag-release-tui
 - **Flexible Branch Support**: Can be configured to work with any branch (currently set to `tag-release-charmbracelet`)
 - **Confirmation Screen**: Displays a summary and asks for confirmation before proceeding
 - **Live Execution**: Shows progress as the release is being created
+- **Automatic Release Detection**: Automatically polls GitHub releases page and provides URL when available
 - **Post-Release Instructions**: Provides next steps after successful release creation
 - **Safe Testing**: Perfect for testing against your fork without affecting upstream
 
@@ -40,7 +41,7 @@ go build -o bin/tag-release-tui ./cmd/tag-release-tui
 
 1. **Validation Phase**: 
    - Checks tag format (semantic versioning)
-   - Verifies you're on the main branch
+   - Verifies you're on the correct branch
    - Fetches latest changes
    - Checks working directory is clean
    - Validates branch is up-to-date
@@ -53,12 +54,18 @@ go build -o bin/tag-release-tui ./cmd/tag-release-tui
 
 3. **Execution Phase**:
    - Creates the release tag
-   - Pushes tag to origin
+   - Pushes tag to specified remote
    - Updates latest-release tag
    - Pushes latest-release tag
 
-4. **Completion Phase**:
-   - Shows success message
+4. **Release Detection Phase** (production mode only):
+   - Automatically polls GitHub releases page every 10 seconds
+   - Shows progress with animated dots
+   - Displays release URL when found (up to 5 minutes)
+   - Gracefully times out if release workflow takes longer
+
+5. **Completion Phase**:
+   - Shows success message with release URL (if found)
    - Provides post-release instructions
    - Shows relevant links
 
@@ -124,13 +131,16 @@ This TUI version provides the same functionality as the original `script/tag-rel
 - Improved error presentation
 - Built-in test mode (no need for `--dry-run` flag)
 - Support for different branches during development
+- **Automatic release detection and URL provision**
 - Enhanced user experience with modern terminal UI
+- **No more manual checking of releases page**
 
 ## Configuration
 
 Currently configured for:
 - **Allowed Branch**: `tag-release-charmbracelet` (for development/testing)
 - **Default Remote**: `origin` (can be overridden with `--remote` flag)
+- **Polling**: Checks GitHub releases every 10 seconds for up to 5 minutes
 - **Target Branch**: Can be modified in the source code for production use
 
 To use with the main branch in production, change the `allowedBranch` parameter in the `performValidation` call.

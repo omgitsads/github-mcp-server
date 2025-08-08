@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -20,6 +22,7 @@ const (
 	stateConfirming
 	stateExecuting
 	stateComplete
+	statePollingRelease
 	stateError
 )
 
@@ -37,6 +40,8 @@ type model struct {
 	executed       bool
 	repoSlug       string
 	testMode       bool
+	releaseURL     string
+	pollingAttempts int
 	width          int
 	height         int
 }
@@ -55,6 +60,14 @@ type executionStepMsg struct {
 type executionCompleteMsg struct {
 	success bool
 	errors  []string
+}
+
+type releaseFoundMsg struct {
+	url string
+}
+
+type releasePollingMsg struct {
+	attempt int
 }
 
 // Styles
@@ -169,13 +182,54 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case executionCompleteMsg:
 		if msg.success {
-			m.state = stateComplete
-			m.executed = true
+			if m.testMode {
+				m.state = stateComplete
+				m.executed = true
+			} else {
+				m.state = statePollingRelease
+				return m, pollForRelease(m.repoSlug, m.tag)
+			}
 		} else {
 			m.state = stateError
 			m.errors = msg.errors
 		}
 		return m, nil
+
+	case releasePollingMsg:
+		m.pollingAttempts = msg.attempt
+		return m, nil
+
+	case releaseFoundMsg:
+		m.releaseURL = msg.url
+		m.state = stateComplete
+		m.executed = true
+		return m, nil
+
+	case pollAttemptMsg:
+		if msg.attempt > 30 {
+			// Timeout after 30 attempts (5 minutes)
+			m.state = stateComplete
+			m.executed = true
+			return m, nil
+		}
+		
+		m.pollingAttempts = msg.attempt
+		
+		// Check if release is available
+		releaseURL := fmt.Sprintf("https://github.com/%s/releases/tag/%s", msg.repoSlug, msg.tag)
+		resp, err := http.Get(releaseURL)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == 200 {
+				m.releaseURL = releaseURL
+				m.state = stateComplete
+				m.executed = true
+				return m, nil
+			}
+		}
+		
+		// Continue polling
+		return m, startPollingTicker(msg.repoSlug, msg.tag, msg.attempt)
 	}
 
 	return m, nil
@@ -191,6 +245,8 @@ func (m model) View() string {
 		return m.renderConfirming()
 	case stateExecuting:
 		return m.renderExecuting()
+	case statePollingRelease:
+		return m.renderPollingRelease()
 	case stateComplete:
 		return m.renderComplete()
 	case stateError:
@@ -312,6 +368,23 @@ func (m model) renderExecuting() string {
 	return content
 }
 
+func (m model) renderPollingRelease() string {
+	content := titleStyle.Render("🏷️  GitHub MCP Server - Tag Release") + "\n\n"
+	content += successStyle.Render("✅ Successfully tagged and pushed release "+m.tag) + "\n"
+	content += successStyle.Render("✅ 'latest-release' tag has been updated") + "\n\n"
+
+	content += subtitleStyle.Render("🔍 Polling for GitHub release...") + "\n\n"
+	
+	dots := strings.Repeat(".", (m.pollingAttempts % 3) + 1)
+	content += warningStyle.Render(fmt.Sprintf("⋯ Checking GitHub releases page%s", dots)) + "\n"
+	content += fmt.Sprintf("   Attempt %d/30 (checking every 10 seconds)\n", m.pollingAttempts+1)
+	content += "\n"
+	content += subtitleStyle.Render("Once the release workflow completes, the draft release URL will appear here.") + "\n"
+	content += subtitleStyle.Render("Press Ctrl+C to exit early if needed.")
+
+	return content
+}
+
 func (m model) renderComplete() string {
 	content := titleStyle.Render("🏷️  GitHub MCP Server - Tag Release")
 	if m.testMode {
@@ -330,13 +403,21 @@ func (m model) renderComplete() string {
 		content += subtitleStyle.Render("To perform the actual release, run without --test flag") + "\n\n"
 	} else {
 		content += successStyle.Render("✅ Successfully tagged and pushed release "+m.tag) + "\n"
-		content += successStyle.Render("✅ 'latest-release' tag has been updated") + "\n\n"
+		content += successStyle.Render("✅ 'latest-release' tag has been updated") + "\n"
+		
+		if m.releaseURL != "" {
+			content += successStyle.Render("✅ Draft release is now available!") + "\n\n"
+			content += subtitleStyle.Render("🎉 Release "+m.tag+" has been created!") + "\n\n"
+			content += highlightStyle.Render("📦 Draft Release URL:") + "\n"
+			content += "   " + m.releaseURL + "\n\n"
+		} else {
+			content += "\n"
+			content += subtitleStyle.Render("🎉 Release "+m.tag+" has been initiated!") + "\n\n"
+		}
 
 		// Post-release instructions
-		content += subtitleStyle.Render("🎉 Release "+m.tag+" has been initiated!") + "\n\n"
 		content += subtitleStyle.Render("Next steps:") + "\n"
 		steps := []string{
-			fmt.Sprintf("📋 Check https://github.com/%s/releases and wait for the draft release", m.repoSlug),
 			"✏️  Edit the new release, delete existing notes and click auto-generate button",
 			"✨ Add a section at the top calling out the main features",
 			"🚀 Publish the release",
@@ -346,8 +427,7 @@ func (m model) renderComplete() string {
 		for _, step := range steps {
 			content += "  " + step + "\n"
 		}
-
-		content += "\n" + subtitleStyle.Render(fmt.Sprintf("📦 Draft Release: https://github.com/%s/releases/tag/%s", m.repoSlug, m.tag)) + "\n\n"
+		content += "\n"
 	}
 
 	content += subtitleStyle.Render("Press Enter to exit")
@@ -535,6 +615,36 @@ func performExecution(tag, remote string, testMode bool) tea.Cmd {
 	})
 }
 
+// pollForRelease polls the GitHub releases page to check if a release is available
+func pollForRelease(repoSlug, tag string) tea.Cmd {
+	return tea.Cmd(func() tea.Msg {
+		// Check immediately first
+		releaseURL := fmt.Sprintf("https://github.com/%s/releases/tag/%s", repoSlug, tag)
+		resp, err := http.Get(releaseURL)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == 200 {
+				return releaseFoundMsg{url: releaseURL}
+			}
+		}
+		
+		// Start polling with ticker
+		return startPollingTicker(repoSlug, tag, 0)
+	})
+}
+
+func startPollingTicker(repoSlug, tag string, attempt int) tea.Cmd {
+	return tea.Tick(time.Second*10, func(t time.Time) tea.Msg {
+		return pollAttemptMsg{repoSlug: repoSlug, tag: tag, attempt: attempt + 1}
+	})
+}
+
+type pollAttemptMsg struct {
+	repoSlug string
+	tag      string
+	attempt  int
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Error: No tag specified.")
@@ -547,7 +657,7 @@ func main() {
 	tag := os.Args[1]
 	testMode := false
 	remote := "origin" // default remote
-	
+
 	// Parse flags
 	for i := 2; i < len(os.Args); i++ {
 		switch os.Args[i] {
@@ -563,13 +673,13 @@ func main() {
 			}
 		}
 	}
-	
+
 	if testMode {
 		fmt.Printf("🧪 Running in TEST MODE - no actual changes will be made (remote: %s)\n", remote)
 	} else {
 		fmt.Printf("🚀 Running release process (remote: %s)\n", remote)
 	}
-	
+
 	p := tea.NewProgram(
 		initialModel(tag, remote, testMode),
 		tea.WithAltScreen(),
