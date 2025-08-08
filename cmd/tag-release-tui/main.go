@@ -713,37 +713,37 @@ func getNextVersion(remote string) (string, error) {
 
 	var versions []*semVersion
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	
+
 	for _, line := range lines {
 		if line == "" {
 			continue
 		}
-		
+
 		// Parse line format: hash	refs/tags/vX.Y.Z
 		parts := strings.Fields(line)
 		if len(parts) < 2 {
 			continue
 		}
-		
+
 		ref := parts[1]
 		if !strings.HasPrefix(ref, "refs/tags/") {
 			continue
 		}
-		
+
 		tag := strings.TrimPrefix(ref, "refs/tags/")
-		
+
 		// Skip annotated tag refs (ending with ^{})
 		if strings.HasSuffix(tag, "^{}") {
 			continue
 		}
-		
+
 		// Try to parse as semantic version
 		version, err := parseSemanticVersion(tag)
 		if err != nil {
 			// Skip non-semantic version tags
 			continue
 		}
-		
+
 		versions = append(versions, version)
 	}
 
@@ -767,7 +767,7 @@ func getNextVersion(remote string) (string, error) {
 	// Get latest version and increment minor
 	latest := versions[len(versions)-1]
 	next := latest.incrementMinor()
-	
+
 	return next.toString(), nil
 }
 
@@ -810,7 +810,7 @@ func main() {
 				}
 			}
 		}
-		
+
 		// Auto-generate tag from latest release
 		fmt.Printf("No version specified. Determining next version from remote '%s'...\n", remote)
 		var err error
