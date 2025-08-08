@@ -12,21 +12,47 @@ go build -o bin/tag-release-tui ./cmd/tag-release-tui
 ## Usage
 
 ```bash
-# Basic usage with default remote (origin)
+# Auto-increment version from latest tag on default remote (origin)
+./bin/tag-release-tui
+
+# Auto-increment version with specific remote
+./bin/tag-release-tui --remote omgitsads
+
+# Auto-increment version in test mode
+./bin/tag-release-tui --test
+
+# Manual version specification (same as before)
 ./bin/tag-release-tui v1.2.3
 
-# Specify a different remote (e.g., your fork)
+# Manual version with different remote
 ./bin/tag-release-tui v1.2.3 --remote omgitsads
 
-# Run in test mode (validation only, no actual changes)
+# Manual version in test mode
 ./bin/tag-release-tui v1.2.3 --test
 
-# Test with a specific remote
+# Combine flags (manual version with remote and test mode)
 ./bin/tag-release-tui v1.2.3 --remote omgitsads --test
 ```
 
+## Auto-Versioning
+
+When no version is specified, the tool will automatically determine the next version:
+
+1. **Fetches all tags** from the specified remote (default: origin)
+2. **Finds the latest semantic version** tag (e.g., v1.2.3)
+3. **Increments the minor version** and resets patch to 0 (e.g., v1.2.3 → v1.3.0)
+4. **Falls back to v0.1.0** if no semantic version tags exist
+
+Examples:
+- If latest tag is `v1.5.2`, next version will be `v1.6.0`
+- If latest tag is `v0.4.1`, next version will be `v0.5.0`
+- If no semantic version tags exist, first version will be `v0.1.0`
+
+This follows semantic versioning conventions and is perfect for automated releases or when you want to maintain consistent version incrementing.
+
 ## Features
 
+- **Auto-Versioning**: Automatically increments minor version from latest tag when no version specified
 - **Interactive Validation**: Shows real-time validation of release requirements
 - **Test Mode**: Run with `--test` flag to validate without making any actual changes
 - **Remote Selection**: Specify git remote with `--remote` flag (default: origin)
@@ -36,6 +62,7 @@ go build -o bin/tag-release-tui ./cmd/tag-release-tui
 - **Automatic Release Detection**: Automatically polls GitHub releases page and provides URL when available
 - **Post-Release Instructions**: Provides next steps after successful release creation
 - **Safe Testing**: Perfect for testing against your fork without affecting upstream
+- **Semantic Versioning**: Supports and validates semantic version format (vX.Y.Z)
 
 ## Flow
 

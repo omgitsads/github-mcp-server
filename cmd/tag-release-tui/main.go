@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -645,33 +647,183 @@ type pollAttemptMsg struct {
 	attempt  int
 }
 
-func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Error: No tag specified.")
-		fmt.Println("Usage: tag-release-tui vX.Y.Z [--remote <remote-name>] [--test]")
-		fmt.Println("  --remote: Specify git remote name (default: origin)")
-		fmt.Println("  --test: Run in test mode (validation only, no actual changes)")
-		os.Exit(1)
+// Semantic version parsing and incrementing functions
+
+type semVersion struct {
+	major, minor, patch int
+	prefix              string // v prefix if present
+}
+
+func parseSemanticVersion(version string) (*semVersion, error) {
+	// Handle v prefix
+	prefix := ""
+	if strings.HasPrefix(version, "v") {
+		prefix = "v"
+		version = version[1:]
 	}
 
-	tag := os.Args[1]
+	parts := strings.Split(version, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid semantic version format: %s", version)
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return nil, fmt.Errorf("invalid major version: %s", parts[0])
+	}
+
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("invalid minor version: %s", parts[1])
+	}
+
+	patch, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return nil, fmt.Errorf("invalid patch version: %s", parts[2])
+	}
+
+	return &semVersion{
+		major:  major,
+		minor:  minor,
+		patch:  patch,
+		prefix: prefix,
+	}, nil
+}
+
+func (v *semVersion) incrementMinor() *semVersion {
+	return &semVersion{
+		major:  v.major,
+		minor:  v.minor + 1,
+		patch:  0, // reset patch to 0 when incrementing minor
+		prefix: v.prefix,
+	}
+}
+
+func (v *semVersion) toString() string {
+	return fmt.Sprintf("%s%d.%d.%d", v.prefix, v.major, v.minor, v.patch)
+}
+
+func getNextVersion(remote string) (string, error) {
+	// Get all tags from the remote
+	cmd := exec.Command("git", "ls-remote", "--tags", remote)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to list remote tags: %v", err)
+	}
+
+	var versions []*semVersion
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		
+		// Parse line format: hash	refs/tags/vX.Y.Z
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+		
+		ref := parts[1]
+		if !strings.HasPrefix(ref, "refs/tags/") {
+			continue
+		}
+		
+		tag := strings.TrimPrefix(ref, "refs/tags/")
+		
+		// Skip annotated tag refs (ending with ^{})
+		if strings.HasSuffix(tag, "^{}") {
+			continue
+		}
+		
+		// Try to parse as semantic version
+		version, err := parseSemanticVersion(tag)
+		if err != nil {
+			// Skip non-semantic version tags
+			continue
+		}
+		
+		versions = append(versions, version)
+	}
+
+	// If no versions found, start at v0.1.0
+	if len(versions) == 0 {
+		return "v0.1.0", nil
+	}
+
+	// Sort versions to find the latest
+	sort.Slice(versions, func(i, j int) bool {
+		a, b := versions[i], versions[j]
+		if a.major != b.major {
+			return a.major < b.major
+		}
+		if a.minor != b.minor {
+			return a.minor < b.minor
+		}
+		return a.patch < b.patch
+	})
+
+	// Get latest version and increment minor
+	latest := versions[len(versions)-1]
+	next := latest.incrementMinor()
+	
+	return next.toString(), nil
+}
+
+func main() {
+	var tag string
 	testMode := false
 	remote := "origin" // default remote
 
-	// Parse flags
-	for i := 2; i < len(os.Args); i++ {
-		switch os.Args[i] {
-		case "--test", "-t":
-			testMode = true
-		case "--remote", "-r":
-			if i+1 < len(os.Args) {
-				remote = os.Args[i+1]
-				i++ // skip next arg
-			} else {
-				fmt.Println("Error: --remote flag requires a value")
-				os.Exit(1)
+	// Check if tag is provided as first argument
+	if len(os.Args) >= 2 && !strings.HasPrefix(os.Args[1], "--") {
+		tag = os.Args[1]
+		// Parse remaining flags starting from index 2
+		for i := 2; i < len(os.Args); i++ {
+			switch os.Args[i] {
+			case "--test", "-t":
+				testMode = true
+			case "--remote", "-r":
+				if i+1 < len(os.Args) {
+					remote = os.Args[i+1]
+					i++ // skip next arg
+				} else {
+					fmt.Println("Error: --remote flag requires a value")
+					os.Exit(1)
+				}
 			}
 		}
+	} else {
+		// No tag provided, parse flags first
+		for i := 1; i < len(os.Args); i++ {
+			switch os.Args[i] {
+			case "--test", "-t":
+				testMode = true
+			case "--remote", "-r":
+				if i+1 < len(os.Args) {
+					remote = os.Args[i+1]
+					i++ // skip next arg
+				} else {
+					fmt.Println("Error: --remote flag requires a value")
+					os.Exit(1)
+				}
+			}
+		}
+		
+		// Auto-generate tag from latest release
+		fmt.Printf("No version specified. Determining next version from remote '%s'...\n", remote)
+		var err error
+		tag, err = getNextVersion(remote)
+		if err != nil {
+			fmt.Printf("Error determining next version: %v\n", err)
+			fmt.Println("\nUsage: tag-release-tui [vX.Y.Z] [--remote <remote-name>] [--test]")
+			fmt.Println("  vX.Y.Z: Version tag (if not provided, auto-increments from latest)")
+			fmt.Println("  --remote: Specify git remote name (default: origin)")
+			fmt.Println("  --test: Run in test mode (validation only, no actual changes)")
+			os.Exit(1)
+		}
+		fmt.Printf("Next version determined: %s\n", tag)
 	}
 
 	if testMode {
