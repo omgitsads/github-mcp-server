@@ -28,22 +28,22 @@ const (
 
 // Model represents the application state
 type model struct {
-	state          state
-	tag            string
-	remote         string
-	currentBranch  string
-	latestTag      string
-	errors         []string
-	validationStep int
-	executionStep  int
-	confirmed      bool
-	executed       bool
-	repoSlug       string
-	testMode       bool
-	releaseURL     string
+	state           state
+	tag             string
+	remote          string
+	currentBranch   string
+	latestTag       string
+	errors          []string
+	validationStep  int
+	executionStep   int
+	confirmed       bool
+	executed        bool
+	repoSlug        string
+	testMode        bool
+	releaseURL      string
 	pollingAttempts int
-	width          int
-	height         int
+	width           int
+	height          int
 }
 
 // Messages
@@ -212,9 +212,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.executed = true
 			return m, nil
 		}
-		
+
 		m.pollingAttempts = msg.attempt
-		
+
 		// Check if release is available
 		releaseURL := fmt.Sprintf("https://github.com/%s/releases/tag/%s", msg.repoSlug, msg.tag)
 		resp, err := http.Get(releaseURL)
@@ -227,7 +227,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
-		
+
 		// Continue polling
 		return m, startPollingTicker(msg.repoSlug, msg.tag, msg.attempt)
 	}
@@ -374,8 +374,8 @@ func (m model) renderPollingRelease() string {
 	content += successStyle.Render("✅ 'latest-release' tag has been updated") + "\n\n"
 
 	content += subtitleStyle.Render("🔍 Polling for GitHub release...") + "\n\n"
-	
-	dots := strings.Repeat(".", (m.pollingAttempts % 3) + 1)
+
+	dots := strings.Repeat(".", (m.pollingAttempts%3)+1)
 	content += warningStyle.Render(fmt.Sprintf("⋯ Checking GitHub releases page%s", dots)) + "\n"
 	content += fmt.Sprintf("   Attempt %d/30 (checking every 10 seconds)\n", m.pollingAttempts+1)
 	content += "\n"
@@ -404,7 +404,7 @@ func (m model) renderComplete() string {
 	} else {
 		content += successStyle.Render("✅ Successfully tagged and pushed release "+m.tag) + "\n"
 		content += successStyle.Render("✅ 'latest-release' tag has been updated") + "\n"
-		
+
 		if m.releaseURL != "" {
 			content += successStyle.Render("✅ Draft release is now available!") + "\n\n"
 			content += subtitleStyle.Render("🎉 Release "+m.tag+" has been created!") + "\n\n"
@@ -627,7 +627,7 @@ func pollForRelease(repoSlug, tag string) tea.Cmd {
 				return releaseFoundMsg{url: releaseURL}
 			}
 		}
-		
+
 		// Start polling with ticker
 		return startPollingTicker(repoSlug, tag, 0)
 	})
