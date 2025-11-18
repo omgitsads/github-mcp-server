@@ -1,3 +1,5 @@
+//go:build ignore
+
 package github
 
 import (
@@ -8,7 +10,7 @@ import (
 	"net/http"
 
 	"github.com/go-viper/mapstructure/v2"
-	"github.com/google/go-github/v77/github"
+	"github.com/google/go-github/v79/github"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/shurcooL/githubv4"
@@ -28,8 +30,8 @@ func PullRequestRead(getClient GetClientFn, t translations.TranslationHelperFunc
 			}),
 			mcp.WithString("method",
 				mcp.Required(),
-				mcp.Description(`Action to specify what pull request data needs to be retrieved from GitHub. 
-Possible options: 
+				mcp.Description(`Action to specify what pull request data needs to be retrieved from GitHub.
+Possible options:
  1. get - Get details of a specific pull request.
  2. get_diff - Get the diff of a pull request.
  3. get_status - Get status of a head commit in a pull request. This reflects status of builds and checks.

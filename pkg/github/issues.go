@@ -1,3 +1,5 @@
+//go:build ignore
+
 package github
 
 import (
@@ -14,7 +16,7 @@ import (
 	"github.com/github/github-mcp-server/pkg/sanitize"
 	"github.com/github/github-mcp-server/pkg/translations"
 	"github.com/go-viper/mapstructure/v2"
-	"github.com/google/go-github/v77/github"
+	"github.com/google/go-github/v79/github"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/shurcooL/githubv4"
@@ -237,8 +239,8 @@ func IssueRead(getClient GetClientFn, getGQLClient GetGQLClientFn, t translation
 			}),
 			mcp.WithString("method",
 				mcp.Required(),
-				mcp.Description(`The read operation to perform on a single issue. 
-Options are: 
+				mcp.Description(`The read operation to perform on a single issue.
+Options are:
 1. get - Get details of a specific issue.
 2. get_comments - Get issue comments.
 3. get_sub_issues - Get sub-issues of the issue.
@@ -862,8 +864,8 @@ func IssueWrite(getClient GetClientFn, getGQLClient GetGQLClientFn, t translatio
 			mcp.WithString("method",
 				mcp.Required(),
 				mcp.Description(`Write operation to perform on a single issue.
-Options are: 
-- 'create' - creates a new issue. 
+Options are:
+- 'create' - creates a new issue.
 - 'update' - updates an existing issue.
 `),
 				mcp.Enum("create", "update"),
